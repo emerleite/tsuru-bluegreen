@@ -7,6 +7,7 @@ import json
 import subprocess
 import ConfigParser
 import argparse
+import time
 
 def get_cname(app):
   headers = {"Authorization" : "bearer " + token}
@@ -49,52 +50,101 @@ def deploy_swap(apps, cname):
   print """
 Changing live application to %s ...""" % apps[1]
 
+  if not add_units(apps[1], production_instances):
+    sys.exit()
+
   if not remove_cname(apps[0]):
     print "Error removing cname of %s. Aborting..." % apps[0]
     sys.exit()
 
   if set_cname(apps[1], cname):
+    remove_units(apps[0])
+
     print """
 Application %s is live at %s ...
     """ % (apps[1], cname)
+
   else:
     print "Error adding cname of %s. Aborting..." % apps[1]
     set_cname(apps[0], cname)
+    remove_units(apps[1])
 
-#Initialization
-token = os.environ['TSURU_TOKEN']
-target = os.environ['TSURU_TARGET']
+def add_units(app, current_units):
+  units = str(int(current_units) - total_units(app))
+  print """
+Adding %s units to %s ...""" % (units, app)
 
-#Parameters
-parser = argparse.ArgumentParser(description='Tsuru blue-green deployment (pre and live).',
-                                 usage='tsuru bluegreen action [options]')
+  headers = {"Authorization" : "bearer " + token}
+  conn = httplib.HTTPConnection(target)
+  conn.request("PUT", "/apps/" + app + '/units', units, headers)
+  response = conn.getresponse()
+  if response.status != 200:
+    print "Error adding units to %s. Aborting..." % app
+    return False
+  return True
 
-parser.add_argument('action', metavar='action', help='pre or swap', choices=['pre', 'swap'])
-parser.add_argument('-t', '--tag', metavar='TAG', help='Tag to be deployed (default: master)', nargs='?', default="master")
+def remove_units(app):
+  units = str(total_units(app)-1)
+  print """
+Removing %s units from %s ...""" % (units, app)
 
-args = parser.parse_args()
+  headers = {"Authorization" : "bearer " + token}
+  conn = httplib.HTTPConnection(target)
+  conn.request("DELETE", "/apps/" + app + '/units', units, headers)
+  response = conn.getresponse()
+  if response.status != 200:
+    print "Error removing units from %s. You'll need to remove manually." % app
+    return False
 
-#Load configuration
-config = ConfigParser.ConfigParser()
-config.read('tsuru-bluegreen.ini')
+  while (total_units(app) > 1):
+    print "Waiting for %s units to go down..." % app
+    time.sleep(1)
+  return True
 
-app_name = config.get('Application', 'name')
+def total_units(app):
+  headers = {"Authorization" : "bearer " + token}
+  conn = httplib.HTTPConnection(target)
+  conn.request("GET", "/apps/" + app, "", headers)
+  response = conn.getresponse()
+  data = json.loads(response.read())
+  return len(data.get('units'))
 
-blue = "%s-blue" % app_name
-green = "%s-green" % app_name
+if __name__ == "__main__":
+  #Initialization
+  token = os.environ['TSURU_TOKEN']
+  target = os.environ['TSURU_TARGET']
 
-apps = [blue, green]
-cnames = [get_cname(green), get_cname(blue)]
+  #Parameters
+  parser = argparse.ArgumentParser(description='Tsuru blue-green deployment (pre and live).',
+                                   usage='tsuru bluegreen action [options]')
 
-#reverse if first is not None
-if cnames[0] is not None:
-  cnames.reverse()
-  apps.reverse()
+  parser.add_argument('action', metavar='action', help='pre or swap', choices=['pre', 'swap'])
+  parser.add_argument('-t', '--tag', metavar='TAG', help='Tag to be deployed (default: master)', nargs='?', default="master")
 
-cname = cnames[1]
-pre = apps[1]
+  args = parser.parse_args()
 
-if args.action == 'pre':
-  deploy_pre(pre, args.tag)
-elif args.action == 'swap':
-  deploy_swap(apps, cname)
+  #Load configuration
+  config = ConfigParser.ConfigParser()
+  config.read('tsuru-bluegreen.ini')
+
+  app_name = config.get('Application', 'name')
+  production_instances = config.get('Application', 'units')
+
+  blue = "%s-blue" % app_name
+  green = "%s-green" % app_name
+
+  apps = [blue, green]
+  cnames = [get_cname(green), get_cname(blue)]
+
+  #reverse if first is not None
+  if cnames[0] is not None:
+    cnames.reverse()
+    apps.reverse()
+
+  cname = cnames[1]
+  pre = apps[1]
+
+  if args.action == 'pre':
+    deploy_pre(pre, args.tag)
+  elif args.action == 'swap':
+    deploy_swap(apps, cname)
