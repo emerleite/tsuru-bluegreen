@@ -8,6 +8,7 @@ import subprocess
 import ConfigParser
 import argparse
 import time
+from urlparse import urlparse
 
 def get_cname(app):
   headers = {"Authorization" : "bearer " + token}
@@ -19,10 +20,10 @@ def get_cname(app):
     return None
   return data.get("cname")
 
-def remove_cname(app):
+def remove_cname(app, cname):
   headers = {"Authorization" : "bearer " + token}
   conn = httplib.HTTPConnection(target)
-  conn.request("DELETE", "/apps/" + app + '/cname', '', headers)
+  conn.request("DELETE", "/apps/" + app + '/cname', '{"cname": ' + json.dumps(cname) + '}', headers)
   response = conn.getresponse()
   if response.status != 200:
     return False
@@ -31,7 +32,7 @@ def remove_cname(app):
 def set_cname(app, cname):
   headers = {"Content-Type" : "application/json", "Authorization" : "bearer " + token}
   conn = httplib.HTTPConnection(target)
-  conn.request("POST", "/apps/" + app + '/cname', '{"cname": "' + cname + '"}', headers)
+  conn.request("POST", "/apps/" + app + '/cname', '{"cname": ' + json.dumps(cname) + '}', headers)
   response = conn.getresponse()
   if response.status != 200:
     return False
@@ -53,8 +54,9 @@ Changing live application to %s ...""" % apps[1]
   if not add_units(apps[1], production_instances):
     sys.exit()
 
-  if not remove_cname(apps[0]):
+  if not remove_cname(apps[0], cname):
     print "Error removing cname of %s. Aborting..." % apps[0]
+    remove_units(apps[1])
     sys.exit()
 
   if set_cname(apps[1], cname):
@@ -62,7 +64,7 @@ Changing live application to %s ...""" % apps[1]
 
     print """
 Application %s is live at %s ...
-    """ % (apps[1], cname)
+    """ % (apps[1], ','.join(cname))
 
   else:
     print "Error adding cname of %s. Aborting..." % apps[1]
@@ -112,7 +114,7 @@ def total_units(app):
 if __name__ == "__main__":
   #Initialization
   token = os.environ['TSURU_TOKEN']
-  target = os.environ['TSURU_TARGET']
+  target = urlparse(os.environ['TSURU_TARGET']).hostname
 
   #Parameters
   parser = argparse.ArgumentParser(description='Tsuru blue-green deployment (pre and live).',
