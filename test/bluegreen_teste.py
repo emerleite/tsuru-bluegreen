@@ -7,7 +7,7 @@ from bluegreen import BlueGreen
 class TestBlueGreen(unittest.TestCase):
 
   def setUp(self):
-    config = {'name': 'test-app', 'units' : '2'}
+    config = {'name': 'test-app'}
 
     self.bg = BlueGreen('token', 'tsuru.globoi.com', config)
     self.cnames = [u'cname1', u'cname2']

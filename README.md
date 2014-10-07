@@ -19,7 +19,6 @@ Create a **tsuru-bluegreen.ini** in your application root with the following con
 ```
 [Application]
 name: <your_app>
-units: <number_of_production_units>
 ```
 
 You must have to have two tsuru applications and git remotes named: your_app**-blue** and your_app**-green**.

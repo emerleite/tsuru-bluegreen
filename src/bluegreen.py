@@ -15,7 +15,6 @@ class BlueGreen:
     self.token = token
     self.target = target
     self.app_name = config['name']
-    self.production_instances = config['units']
 
   def get_cname(self, app):
     headers = {"Authorization" : "bearer " + self.token}
@@ -98,7 +97,7 @@ class BlueGreen:
     print """
   Changing live application to %s ...""" % apps[1]
 
-    if not self.add_units(apps[1], self.production_instances):
+    if not self.add_units(apps[1], self.total_units(apps[0])):
       sys.exit()
 
     if not self.remove_cname(apps[0], cname):
@@ -137,12 +136,11 @@ if __name__ == "__main__":
   config.read('tsuru-bluegreen.ini')
 
   app_name = config.get('Application', 'name')
-  production_instances = config.get('Application', 'units')
 
   blue = "%s-blue" % app_name
   green = "%s-green" % app_name
 
-  bluegreen = BlueGreen(token, target, {'name' : app_name, 'units' : production_instances})
+  bluegreen = BlueGreen(token, target, {'name' : app_name})
 
   apps = [blue, green]
   cnames = [bluegreen.get_cname(green), bluegreen.get_cname(blue)]
