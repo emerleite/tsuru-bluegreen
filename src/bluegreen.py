@@ -79,7 +79,12 @@ class BlueGreen:
     conn = httplib.HTTPConnection(self.target)
     conn.request("PUT", "/apps/" + app + '/units', units, headers)
     response = conn.getresponse()
+    response.read()
     if response.status != 200:
+      print "Error adding units to %s. Aborting..." % app
+      return False
+
+    if (self.total_units(app) != int(current_units)):
       print "Error adding units to %s. Aborting..." % app
       return False
     return True
