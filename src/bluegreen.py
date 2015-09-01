@@ -59,7 +59,7 @@ class BlueGreen:
 
     headers = {"Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
-    conn.request("DELETE", "/apps/" + app + '/units', units, headers)
+    conn.request("DELETE", "/apps/" + app + '/units?units='+units, units, headers)
     response = conn.getresponse()
     if response.status != 200:
       print "Error removing units from %s. You'll need to remove manually." % app
@@ -77,7 +77,7 @@ class BlueGreen:
 
     headers = {"Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
-    conn.request("PUT", "/apps/" + app + '/units', units, headers)
+    conn.request("PUT", "/apps/" + app + '/units?units='+units, units, headers)
     response = conn.getresponse()
     response.read()
     if response.status != 200:
