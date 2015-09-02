@@ -76,19 +76,14 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_remove_units_should_return_true_when_removes(self):
-    def side_effect(*args):
-      def second_call(*args):
-        return 1
-      self.bg.total_units.side_effect = second_call
-      return 2
-
-    self.bg.total_units = Mock(side_effect=side_effect)
+    self.bg.total_units = Mock(side_effect=self.mock_total_units([2, 1]))
 
     httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
                            data='1',
                            status=200)
 
     self.assertTrue(self.bg.remove_units('xpto'))
+    self.assertEqual({"units": ["1"]}, httpretty.last_request().querystring)
 
   @httpretty.activate
   def test_remove_units_should_return_false_when_not_removes(self):
@@ -102,13 +97,14 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_add_units_should_return_true_when_adds(self):
-    self.bg.total_units = MagicMock(return_value=1)
+    self.bg.total_units = MagicMock(side_effect=self.mock_total_units([1, 2]))
 
-    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units?units=1',
                            data='1',
                            status=200)
 
     self.assertTrue(self.bg.add_units('xpto', 2))
+    self.assertEqual({"units": ["1"]}, httpretty.last_request().querystring)
 
   @httpretty.activate
   def test_add_units_should_return_false_when_adds(self):
@@ -119,3 +115,11 @@ class TestBlueGreen(unittest.TestCase):
                            status=500)
 
     self.assertFalse(self.bg.add_units('xpto', 2))
+
+  def mock_total_units(self, values):
+    calls = {'count': 0}
+    def total_units(*args, **kwargs):
+      result = values[calls['count']]
+      calls['count'] += 1
+      return result
+    return total_units
