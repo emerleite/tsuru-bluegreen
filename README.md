@@ -1,4 +1,4 @@
-tsuru-bluegreen
+tsuru-bluegreen [![Build Status](https://travis-ci.org/emerleite/tsuru-bluegreen.svg?branch=master)](https://travis-ci.org/emerleite/tsuru-bluegreen)
 ===============
 
 A blue-green deployment plugin for tsuru client
