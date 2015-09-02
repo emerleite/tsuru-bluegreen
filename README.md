@@ -3,6 +3,11 @@ tsuru-bluegreen [![Build Status](https://travis-ci.org/emerleite/tsuru-bluegreen
 
 A blue-green deployment plugin for tsuru client
 
+Dependencies
+------------
+
+Python 2.7
+
 Installation
 ------------
 
@@ -66,4 +71,7 @@ optional arguments:
 Tests
 -----
 
-Just run nosetests
+```
+$ pip install -r test_requirements.txt
+$ nosetests test/bluegreen_test.py
+```
