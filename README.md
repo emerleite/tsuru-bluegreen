@@ -62,3 +62,8 @@ optional arguments:
   -h, --help            show this help message and exit
   -t [TAG], --tag [TAG] Tag to be deployed (default: master)
 ```
+
+Tests
+-----
+
+Just run nosetests
