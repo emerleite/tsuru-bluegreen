@@ -116,6 +116,18 @@ class TestBlueGreen(unittest.TestCase):
 
     self.assertFalse(self.bg.add_units('xpto', 2))
 
+  @httpretty.activate
+  def test_run_command_should_return_true_on_success(self):
+    self.assertTrue(self.bg.run_command('echo test'))
+
+  @httpretty.activate
+  def test_run_command_should_return_false_on_error(self):
+    self.assertFalse(self.bg.run_command('cat undefined_file'))
+
+  @httpretty.activate
+  def test_run_command_should_return_false_on_undefined_command(self):
+    self.assertFalse(self.bg.run_command('undefined_command'))
+
   def mock_total_units(self, values):
     calls = {'count': 0}
     def total_units(*args, **kwargs):

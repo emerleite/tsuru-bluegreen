@@ -9,6 +9,7 @@ import ConfigParser
 import argparse
 import time
 from urlparse import urlparse
+from subprocess import call
 
 class BlueGreen:
   def __init__(self, token, target, config):
@@ -88,6 +89,15 @@ class BlueGreen:
       print "Error adding units to %s. Aborting..." % app
       return False
     return True
+
+  def run_command(self, command):
+    DEVNULL = open(os.devnull, 'wb')
+
+    try:
+      return_value = call(command.split(' '), stdout=DEVNULL, stderr=DEVNULL)
+      return return_value == 0
+    except:
+      return False
 
   def deploy_pre(self, app, tag):
     print """
