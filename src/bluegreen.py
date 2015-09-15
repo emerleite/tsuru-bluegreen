@@ -132,6 +132,34 @@ class BlueGreen:
       self.set_cname(apps[0], cname)
       self.remove_units(apps[1])
 
+
+class Config:
+  @classmethod
+  def load(self, filepath):
+    config = ConfigParser.ConfigParser()
+    config.read(filepath)
+
+    app_name = config.get('Application', 'name')
+
+    hooks = {
+      'before_pre': None,
+      'after_pre': None,
+      'before_swap': None,
+      'after_swap': None
+    }
+    for key in hooks:
+      try:
+        print key
+        hook_value = config.get('Hooks', key)
+        if hook_value:
+          hooks[key] = hook_value
+
+      except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        pass
+
+    return {'name' : app_name, 'hooks' : hooks}
+
+
 if __name__ == "__main__":
   #Initialization
   token = os.environ['TSURU_TOKEN']
@@ -146,16 +174,13 @@ if __name__ == "__main__":
 
   args = parser.parse_args()
 
-  #Load configuration
-  config = ConfigParser.ConfigParser()
-  config.read('tsuru-bluegreen.ini')
+  config = Config.load('tsuru-bluegreen.ini')
 
-  app_name = config.get('Application', 'name')
-
+  app_name = config['name']
   blue = "%s-blue" % app_name
   green = "%s-green" % app_name
 
-  bluegreen = BlueGreen(token, target, {'name' : app_name})
+  bluegreen = BlueGreen(token, target, config)
 
   apps = [blue, green]
   cnames = [bluegreen.get_cname(green), bluegreen.get_cname(blue)]
