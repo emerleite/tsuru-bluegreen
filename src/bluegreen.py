@@ -16,6 +16,10 @@ class BlueGreen:
     self.token = token
     self.target = target
     self.app_name = config['name']
+    try:
+      self.hooks = config['hooks']
+    except KeyError:
+      self.hooks = {}
 
   def get_cname(self, app):
     headers = {"Authorization" : "bearer " + self.token}
@@ -99,18 +103,34 @@ class BlueGreen:
     except:
       return False
 
+  def run_hook(self, hook_name):
+    hook_command = self.hooks.get(hook_name)
+    if hook_command:
+      print """
+  Running '%s' hook ...
+      """ % (hook_name)
+      return self.run_command(hook_command)
+
+    return True
+
   def deploy_pre(self, app, tag):
     print """
   Pre deploying tag:%s to %s ...
     """ % (tag, app)
 
+    self.run_hook('before_pre')
+
     process = subprocess.Popen(['git', 'push', app, "%s:master" % tag], stdout=subprocess.PIPE)
     for line in iter(process.stdout.readline, ''):
       sys.stdout.write(line)
 
+    self.run_hook('after_pre')
+
   def deploy_swap(self, apps, cname):
     print """
   Changing live application to %s ...""" % apps[1]
+
+    self.run_hook('before_swap')
 
     if not self.add_units(apps[1], self.total_units(apps[0])):
       sys.exit()
@@ -126,6 +146,8 @@ class BlueGreen:
       print """
   Application %s is live at %s ...
       """ % (apps[1], ','.join(cname))
+
+      self.run_hook('after_swap')
 
     else:
       print "Error adding cname of %s. Aborting..." % apps[1]
@@ -149,7 +171,6 @@ class Config:
     }
     for key in hooks:
       try:
-        print key
         hook_value = config.get('Hooks', key)
         if hook_value:
           hooks[key] = hook_value

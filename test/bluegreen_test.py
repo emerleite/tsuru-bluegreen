@@ -7,7 +7,7 @@ from bluegreen import BlueGreen
 class TestBlueGreen(unittest.TestCase):
 
   def setUp(self):
-    config = {'name': 'test-app'}
+    config = {'name': 'test-app', 'hooks': {'before_pre': 'echo test', 'after_swap': 'undefined_command'}}
 
     self.bg = BlueGreen('token', 'tsuru.globoi.com', config)
     self.cnames = [u'cname1', u'cname2']
@@ -116,17 +116,23 @@ class TestBlueGreen(unittest.TestCase):
 
     self.assertFalse(self.bg.add_units('xpto', 2))
 
-  @httpretty.activate
   def test_run_command_should_return_true_on_success(self):
     self.assertTrue(self.bg.run_command('echo test'))
 
-  @httpretty.activate
   def test_run_command_should_return_false_on_error(self):
     self.assertFalse(self.bg.run_command('cat undefined_file'))
 
-  @httpretty.activate
   def test_run_command_should_return_false_on_undefined_command(self):
     self.assertFalse(self.bg.run_command('undefined_command'))
+
+  def test_run_hook_should_return_true_on_successful_command(self):
+    self.assertTrue(self.bg.run_hook('before_pre'))
+
+  def test_run_hook_should_return_false_on_failing_command(self):
+    self.assertFalse(self.bg.run_hook('after_swap'))
+
+  def test_run_hook_should_return_true_on_undefined_hook(self):
+    self.assertTrue(self.bg.run_hook('after_pre'))
 
   def mock_total_units(self, values):
     calls = {'count': 0}

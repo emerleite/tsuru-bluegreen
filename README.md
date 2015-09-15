@@ -24,7 +24,16 @@ Create a **tsuru-bluegreen.ini** in your application root with the following con
 ```
 [Application]
 name: <your_app>
+
+[Hooks]
+before_pre: <command to run before 'pre' action>
+after_pre: <command to run after a successful 'pre' action>
+before_swap: <command to run before 'swap' action>
+after_swap: <command to run after a successful 'swap' action>
+
 ```
+
+Hooks are optional. They are ran before or after the corresponding actions, and everything sent to stdout and stderr are ignored.
 
 You must have to have two tsuru applications and git remotes named: your_app**-blue** and your_app**-green**.
 
