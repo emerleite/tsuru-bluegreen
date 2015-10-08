@@ -120,7 +120,7 @@ class BlueGreen:
 
     self.run_hook('before_pre')
 
-    process = subprocess.Popen(['git', 'push', app, "%s:master" % tag], stdout=subprocess.PIPE)
+    process = subprocess.Popen(['git', 'push', '--force', app, "%s:master" % tag], stdout=subprocess.PIPE)
     for line in iter(process.stdout.readline, ''):
       sys.stdout.write(line)
 
