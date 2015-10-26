@@ -46,7 +46,7 @@ $ tsuru app-list
 | Application   | Units State Summary     | Address                                           | Ready? |
 +---------------+-------------------------+---------------------------------------------------+--------+
 | sample-blue   | 4 of 4 units in-service | sample.example.com, sample-blue.cloud.example.com | Yes    |
-| sample-green  | 1 of 1 units in-service | sample-green.cloud.globoi.com                     | Yes    |
+| sample-green  | 0 of 0 units in-service | sample-green.cloud.globoi.com                     | Yes    |
 +---------------+-------------------------+---------------------------------------------------+--------+
 ```
 
