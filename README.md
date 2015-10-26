@@ -1,23 +1,18 @@
-tsuru-bluegreen [![Build Status](https://travis-ci.org/emerleite/tsuru-bluegreen.svg?branch=master)](https://travis-ci.org/emerleite/tsuru-bluegreen)
-===============
+# tsuru-bluegreen [![Build Status](https://travis-ci.org/emerleite/tsuru-bluegreen.svg?branch=master)](https://travis-ci.org/emerleite/tsuru-bluegreen)
 
 A blue-green deployment plugin for tsuru client
 
-Dependencies
-------------
+## Dependencies
 
 Python 2.7
 
-Installation
-------------
+## Installation
 
 tsuru plugin-install bluegreen https://raw.githubusercontent.com/emerleite/tsuru-bluegreen/master/src/bluegreen.py
 
+## Configuration
 
-Configuration
--------------
-
-Tsuru bluegreen uses convention over configuration. It assumes your application backend is named using blue and green sufix, as explained bellow:
+Tsuru bluegreen uses convention over configuration. It assumes your application backend is named using blue and green sufixes, as explained bellow:
 
 Create a **tsuru-bluegreen.ini** in your application root with the following configuration:
 
@@ -30,14 +25,36 @@ before_pre: <command to run before 'pre' action>
 after_pre: <command to run after a successful 'pre' action>
 before_swap: <command to run before 'swap' action>
 after_swap: <command to run after a successful 'swap' action>
-
 ```
 
-Hooks are optional. They are ran before or after the corresponding actions, and everything sent to stdout and stderr are ignored.
+### 'Application' section
 
-You must have to have two tsuru applications and git remotes named: your_app**-blue** and your_app**-green**.
+Based on the `name` configuration value, you must have to have two tsuru applications and git remotes named: your_app**-blue** and your_app**-green**.
 
-#### Tsuru example:
+### 'Hooks' section
+
+Hooks are optional. They are ran before or after the corresponding actions, and everything sent to stdout and stderr is ignored. **If a before hook fails (return value isn't zero), the action (pre/swap) is cancelled.**
+
+Hooks must run inside a shell. If you want to run a `curl` command, for instance, you should do it inside a shell script:
+
+```
+$ cat script.sh
+#! /bin/sh
+curl http://example.com
+
+$ cat tsuru-bluegreen.ini
+[Application]
+name: test
+
+[Hooks]
+before_pre: ./script.sh
+
+$ tsuru bluegreen pre -t some-tag
+```
+
+In this case, if `curl` command fails, the `pre` action will be cancelled.
+
+## Example
 
 ```
 $ tsuru app-list
@@ -50,8 +67,6 @@ $ tsuru app-list
 +---------------+-------------------------+---------------------------------------------------+--------+
 ```
 
-#### Git example:
-
 ```
 $ git remote
 
@@ -60,8 +75,8 @@ sample-green
 
 ```
 
-Usage
------
+## Usage
+
 ```
 tsuru bluegreen --help
 
@@ -77,8 +92,7 @@ optional arguments:
   -t [TAG], --tag [TAG] Tag to be deployed (default: master)
 ```
 
-Tests
------
+## Tests
 
 ```
 $ pip install -r test_requirements.txt
