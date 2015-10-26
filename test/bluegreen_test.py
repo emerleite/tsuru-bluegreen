@@ -165,6 +165,10 @@ class TestBlueGreen(unittest.TestCase):
   def test_run_command_should_return_false_on_undefined_command(self):
     self.assertFalse(self.bg.run_command('undefined_command'))
 
+  def test_run_command_should_accept_environment_variables(self):
+    self.assertTrue(self.bg.run_command('./test/env_test.sh', {'VAR': '0'}))
+    self.assertFalse(self.bg.run_command('./test/env_test.sh', {'VAR': '1'}))
+
   def test_run_hook_should_return_true_on_successful_command(self):
     self.assertTrue(self.bg.run_hook('before_pre'))
 

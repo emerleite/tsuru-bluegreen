@@ -113,22 +113,22 @@ class BlueGreen:
       return False
     return True
 
-  def run_command(self, command):
+  def run_command(self, command, env_vars=None):
     DEVNULL = open(os.devnull, 'wb')
 
     try:
-      return_value = call(command.split(' '), stdout=DEVNULL, stderr=DEVNULL)
+      return_value = call(command.split(' '), stdout=DEVNULL, stderr=DEVNULL, env=env_vars)
       return return_value == 0
     except:
       return False
 
-  def run_hook(self, hook_name):
+  def run_hook(self, hook_name, env_vars=None):
     hook_command = self.hooks.get(hook_name)
     if hook_command:
       print """
   Running '%s' hook ...
       """ % (hook_name)
-      return self.run_command(hook_command)
+      return self.run_command(hook_command, env_vars)
 
     return True
 
@@ -137,19 +137,23 @@ class BlueGreen:
   Pre deploying tag:%s to %s ...
     """ % (tag, app)
 
-    self.run_hook('before_pre')
+    self.env_set(app, 'TAG', tag)
+
+    self.run_hook('before_pre', {"TAG": tag})
 
     process = subprocess.Popen(['git', 'push', '--force', app, "%s:master" % tag], stdout=subprocess.PIPE)
     for line in iter(process.stdout.readline, ''):
       sys.stdout.write(line)
 
-    self.run_hook('after_pre')
+    self.run_hook('after_pre', {"TAG": tag})
 
   def deploy_swap(self, apps, cname):
     print """
   Changing live application to %s ...""" % apps[1]
 
-    self.run_hook('before_swap')
+    tag = self.env_get(apps[1], 'TAG')
+
+    self.run_hook('before_swap', {"TAG": tag})
 
     if not self.add_units(apps[1], self.total_units(apps[0])):
       sys.exit()
@@ -166,7 +170,7 @@ class BlueGreen:
   Application %s is live at %s ...
       """ % (apps[1], ','.join(cname))
 
-      self.run_hook('after_swap')
+      self.run_hook('after_swap', {"TAG": tag})
 
     else:
       print "Error adding cname of %s. Aborting..." % apps[1]
