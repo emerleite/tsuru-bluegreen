@@ -76,8 +76,8 @@ class BlueGreen:
     data = json.loads(response.read())
     return len(data.get('units'))
 
-  def remove_units(self, app):
-    units = str(self.total_units(app)-1)
+  def remove_units(self, app, keep=0):
+    units = str(self.total_units(app) - keep)
     print """
   Removing %s units from %s ...""" % (units, app)
 
@@ -137,6 +137,8 @@ class BlueGreen:
   Pre deploying tag:%s to %s ...
     """ % (tag, app)
 
+    self.remove_units(app)
+
     self.env_set(app, 'TAG', tag)
 
     self.run_hook('before_pre', {"TAG": tag})
@@ -160,7 +162,7 @@ class BlueGreen:
 
     if not self.remove_cname(apps[0], cname):
       print "Error removing cname of %s. Aborting..." % apps[0]
-      self.remove_units(apps[1])
+      self.remove_units(apps[1], 1)
       sys.exit()
 
     if self.set_cname(apps[1], cname):
@@ -175,7 +177,7 @@ class BlueGreen:
     else:
       print "Error adding cname of %s. Aborting..." % apps[1]
       self.set_cname(apps[0], cname)
-      self.remove_units(apps[1])
+      self.remove_units(apps[1], 1)
 
 
 class Config:

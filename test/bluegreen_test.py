@@ -123,7 +123,19 @@ class TestBlueGreen(unittest.TestCase):
                            status=200)
 
     self.assertTrue(self.bg.remove_units('xpto'))
+    self.assertEqual({"units": ["2"]}, httpretty.last_request().querystring)
+
+  @httpretty.activate
+  def test_remove_units_should_allow_keep_units(self):
+    self.bg.total_units = Mock(side_effect=self.mock_total_units([2, 1]))
+
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
+                           data='1',
+                           status=200)
+
+    self.assertTrue(self.bg.remove_units('xpto', 1))
     self.assertEqual({"units": ["1"]}, httpretty.last_request().querystring)
+
 
   @httpretty.activate
   def test_remove_units_should_return_false_when_not_removes(self):
