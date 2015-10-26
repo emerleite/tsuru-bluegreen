@@ -36,27 +36,21 @@ class BlueGreen:
     conn = httplib.HTTPConnection(self.target)
     conn.request("DELETE", "/apps/" + app + '/cname', '{"cname": ' + json.dumps(cname) + '}', headers)
     response = conn.getresponse()
-    if response.status != 200:
-      return False
-    return True
+    return response.status == 200
 
   def set_cname(self, app, cname):
     headers = {"Content-Type" : "application/json", "Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
     conn.request("POST", "/apps/" + app + '/cname', '{"cname": ' + json.dumps(cname) + '}', headers)
     response = conn.getresponse()
-    if response.status != 200:
-      return False
-    return True
+    return response.status == 200
 
   def env_set(self, app, key, value):
     headers = {"Content-Type" : "application/json", "Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
     conn.request("POST", "/apps/" + app + '/env', '{"' + key + '": "' + value + '"}', headers)
     response = conn.getresponse()
-    if response.status != 200:
-      return False
-    return True
+    return response.status == 200
 
   def env_get(self, app, key):
     headers = {"Authorization" : "bearer " + self.token}

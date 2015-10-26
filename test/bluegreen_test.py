@@ -136,7 +136,6 @@ class TestBlueGreen(unittest.TestCase):
     self.assertTrue(self.bg.remove_units('xpto', 1))
     self.assertEqual({"units": ["1"]}, httpretty.last_request().querystring)
 
-
   @httpretty.activate
   def test_remove_units_should_return_false_when_not_removes(self):
     self.bg.total_units = MagicMock(return_value=2)
