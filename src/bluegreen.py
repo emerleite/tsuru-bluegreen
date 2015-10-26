@@ -49,6 +49,25 @@ class BlueGreen:
       return False
     return True
 
+  def env_set(self, app, key, value):
+    headers = {"Content-Type" : "application/json", "Authorization" : "bearer " + self.token}
+    conn = httplib.HTTPConnection(self.target)
+    conn.request("POST", "/apps/" + app + '/env', '{"' + key + '": "' + value + '"}', headers)
+    response = conn.getresponse()
+    if response.status != 200:
+      return False
+    return True
+
+  def env_get(self, app, key):
+    headers = {"Authorization" : "bearer " + self.token}
+    conn = httplib.HTTPConnection(self.target)
+    conn.request("GET", "/apps/" + app + '/env', '["' + key + '"]', headers)
+    response = conn.getresponse()
+    data = json.loads(response.read())
+    if data is None or len(data) == 0:
+      return None
+    return data[0].get("value")
+
   def total_units(self, app):
     headers = {"Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)

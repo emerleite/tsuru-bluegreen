@@ -59,6 +59,46 @@ class TestBlueGreen(unittest.TestCase):
     self.assertFalse(self.bg.set_cname('xpto', self.cnames))
 
   @httpretty.activate
+  def test_env_set_return_true_when_can_set(self):
+    httpretty.register_uri(httpretty.POST, 'http://tsuru.globoi.com/apps/xpto/env',
+                           data='{"TAG":"tag_value"}',
+                           status=200)
+
+    self.assertTrue(self.bg.env_set('xpto', 'TAG', 'tag_value'))
+
+  @httpretty.activate
+  def test_env_set_return_false_when_cant_set(self):
+    httpretty.register_uri(httpretty.POST, 'http://tsuru.globoi.com/apps/xpto/env',
+                           data='{"TAG":"tag_value"}',
+                           status=500)
+
+    self.assertFalse(self.bg.env_set('xpto', 'TAG', 'tag_value'))
+
+  @httpretty.activate
+  def test_env_get_returns_a_value_when_present(self):
+    httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto/env',
+                           data='["TAG"]',
+                           body='[{"name":"TAG","public":true,"value":"1.0"}]')
+
+    self.assertEqual(self.bg.env_get('xpto', 'TAG'), '1.0')
+
+  @httpretty.activate
+  def test_env_get_returns_none_when_null(self):
+    httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto/env',
+                           data='["TAG"]',
+                           body='null')
+
+    self.assertIsNone(self.bg.env_get('xpto', 'TAG'))
+
+  @httpretty.activate
+  def test_env_get_returns_none_when_null(self):
+    httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto/env',
+                           data='["TAG"]',
+                           body='[]')
+
+    self.assertIsNone(self.bg.env_get('xpto', 'TAG'))
+
+  @httpretty.activate
   def test_total_units_zero_when_empty(self):
     httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto',
                            body='{"units":[]}',
