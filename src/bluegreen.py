@@ -9,7 +9,6 @@ import ConfigParser
 import argparse
 import time
 from urlparse import urlparse
-from subprocess import call
 
 class BlueGreen:
   def __init__(self, token, target, config):
@@ -111,7 +110,7 @@ class BlueGreen:
     DEVNULL = open(os.devnull, 'wb')
 
     try:
-      return_value = call(command.split(' '), stdout=DEVNULL, stderr=DEVNULL, env=env_vars)
+      return_value = subprocess.call(command.split(' '), stdout=DEVNULL, stderr=DEVNULL, env=env_vars)
       return return_value == 0
     except:
       return False
@@ -135,13 +134,20 @@ class BlueGreen:
 
     self.env_set(app, 'TAG', tag)
 
-    self.run_hook('before_pre', {"TAG": tag})
+    if not self.run_hook('before_pre', {"TAG": tag}):
+        print """
+  Error running 'before' hook. Pre deploy aborted.
+        """
+        return
 
     process = subprocess.Popen(['git', 'push', '--force', app, "%s:master" % tag], stdout=subprocess.PIPE)
     for line in iter(process.stdout.readline, ''):
       sys.stdout.write(line)
 
-    self.run_hook('after_pre', {"TAG": tag})
+    if not self.run_hook('after_pre', {"TAG": tag}):
+        print """
+  Error running 'after' hook. Pre deploy aborted.
+        """
 
   def deploy_swap(self, apps, cname):
     print """
@@ -149,7 +155,11 @@ class BlueGreen:
 
     tag = self.env_get(apps[1], 'TAG')
 
-    self.run_hook('before_swap', {"TAG": tag})
+    if not self.run_hook('before_swap', {"TAG": tag}):
+        print """
+  Error running 'before' hook. Pre deploy aborted.
+        """
+        return
 
     if not self.add_units(apps[1], self.total_units(apps[0])):
       sys.exit()
@@ -166,7 +176,10 @@ class BlueGreen:
   Application %s is live at %s ...
       """ % (apps[1], ','.join(cname))
 
-      self.run_hook('after_swap', {"TAG": tag})
+      if not self.run_hook('after_swap', {"TAG": tag}):
+          print """
+  Error running 'before' hook. Pre deploy aborted.
+          """
 
     else:
       print "Error adding cname of %s. Aborting..." % apps[1]
