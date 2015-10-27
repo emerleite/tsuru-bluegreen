@@ -23,25 +23,25 @@ name: <your_app>
 [NewRelic]
 api_key: <newrelic_api_key>
 app_id: <newrelic_app_id>
-```
 
 [Hooks]
 before_pre: <command to run before 'pre' action>
 after_pre: <command to run after a successful 'pre' action>
 before_swap: <command to run before 'swap' action>
 after_swap: <command to run after a successful 'swap' action>
+```
 
 ### 'Application' section
 
 Based on the `name` configuration value, you must have to have two tsuru applications and git remotes named: your_app**-blue** and your_app**-green**.
 
-### 'NewRelic' session
+### 'NewRelic' section
 
 Notify New Relic about your deployment after swap. See [NewRelic docs](https://docs.newrelic.com/docs/apm/new-relic-apm/maintenance/deployment-notifications).
 
 ### 'Hooks' section
 
-Hooks are optional. They are ran before or after the corresponding actions, and everything sent to stdout and stderr is ignored. **If a before hook fails (return value isn't zero), the action (pre/swap) is cancelled.**
+Hooks are optional. They are ran before or after the corresponding actions, and everything sent to stdout and stderr is ignored. **If a before hook fails (return value isn't zero), the action (pre/swap) is cancelled.** If you want to run the pre/swap action independently of the before hook execution, you need to make sure it always returns `0`.
 
 Hooks must run inside a shell. If you want to run a `curl` command, for instance, you should do it inside a shell script:
 
@@ -104,5 +104,5 @@ optional arguments:
 
 ```
 $ pip install -r test_requirements.txt
-$ nosetests test/bluegreen_test.py
+$ nosetests test/*.py
 ```
