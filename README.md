@@ -20,20 +20,24 @@ Create a **tsuru-bluegreen.ini** in your application root with the following con
 [Application]
 name: <your_app>
 
+[NewRelic]
+api_key: <newrelic_api_key>
+app_id: <newrelic_app_id>
+```
+
 [Hooks]
 before_pre: <command to run before 'pre' action>
 after_pre: <command to run after a successful 'pre' action>
 before_swap: <command to run before 'swap' action>
 after_swap: <command to run after a successful 'swap' action>
 
-[NewRelic]
-api_key: <newrelic_api_key>
-app_id: <newrelic_app_id>
-```
-
 ### 'Application' section
 
 Based on the `name` configuration value, you must have to have two tsuru applications and git remotes named: your_app**-blue** and your_app**-green**.
+
+### 'NewRelic' session
+
+Notify New Relic about your deployment after swap. See [NewRelic docs](https://docs.newrelic.com/docs/apm/new-relic-apm/maintenance/deployment-notifications).
 
 ### 'Hooks' section
 
@@ -57,10 +61,6 @@ $ tsuru bluegreen pre -t some-tag
 ```
 
 In this case, if `curl` command fails, the `pre` action will be cancelled.
-
-### 'NewRelic' session
-
-Notify New Relic about your deployment after swap. See [NewRelic docs](https://docs.newrelic.com/docs/apm/new-relic-apm/maintenance/deployment-notifications).
 
 ## Example
 
