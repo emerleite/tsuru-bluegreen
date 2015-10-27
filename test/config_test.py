@@ -18,3 +18,7 @@ class TestConfig(unittest.TestCase):
   def test_load_undefined_hooks(self):
     self.assertEqual(None, self.config['hooks']['after_pre'])
     self.assertEqual(None, self.config['hooks']['before_swap'])
+
+  def test_load_newrelic_config(self):
+    self.assertEqual('some-api-key', self.config['newrelic']['api_key'])
+    self.assertEqual('123', self.config['newrelic']['app_id'])

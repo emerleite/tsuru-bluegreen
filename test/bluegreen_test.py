@@ -7,7 +7,11 @@ from bluegreen import BlueGreen
 class TestBlueGreen(unittest.TestCase):
 
   def setUp(self):
-    config = {'name': 'test-app', 'hooks': {'before_pre': 'echo test', 'after_swap': 'undefined_command'}}
+    config = {
+      'name': 'test-app',
+      'hooks': {'before_pre' : 'echo test', 'after_swap' : 'undefined_command'},
+      'newrelic': {'api_key' : 'some-api-key', 'app_id' : '123'}
+    }
 
     self.bg = BlueGreen('token', 'tsuru.globoi.com', config)
     self.cnames = [u'cname1', u'cname2']
@@ -166,6 +170,36 @@ class TestBlueGreen(unittest.TestCase):
                            status=500)
 
     self.assertFalse(self.bg.add_units('xpto', 2))
+
+  @httpretty.activate
+  def test_notify_newrelic_when_config_defined(self):
+    httpretty.register_uri(httpretty.POST, 'http://api.newrelic.com/deployments.xml',
+                           data='deployment[application_id]=some-api-key&deployment[revision]=1.0',
+                           content_type='application/x-www-form-urlencoded',
+                           forcing_headers={
+                             'x-api-key': 'some-api-key'
+                           },
+                           status=200)
+
+    self.assertTrue(self.bg.notify_newrelic('1.0'))
+
+  def test_dont_notify_newrelic_when_config_undefined(self):
+    self.bg.newrelic = {}
+    self.assertFalse(self.bg.notify_newrelic('1.0'))
+
+  @httpretty.activate
+  def test_dont_notify_newrelic_when_wrong_api_key(self):
+    httpretty.register_uri(httpretty.POST, 'http://api.newrelic.com/deployments.xml',
+                           data='deployment[application_id]=some-api-key&deployment[revision]=1.0',
+                           status=403)
+    self.assertFalse(self.bg.notify_newrelic('1.0'))
+
+  @httpretty.activate
+  def test_dont_notify_newrelic_when_error(self):
+    httpretty.register_uri(httpretty.POST, 'http://api.newrelic.com/deployments.xml',
+                           data='deployment[application_id]=some-api-key&deployment[revision]=1.0',
+                           status=500)
+    self.assertFalse(self.bg.notify_newrelic('1.0'))
 
   def test_run_command_should_return_true_on_success(self):
     self.assertTrue(self.bg.run_command('echo test'))

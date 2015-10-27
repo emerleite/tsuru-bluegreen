@@ -19,6 +19,10 @@ class BlueGreen:
       self.hooks = config['hooks']
     except KeyError:
       self.hooks = {}
+    try:
+      self.newrelic = config['newrelic']
+    except KeyError:
+      self.newrelic = {}
 
   def get_cname(self, app):
     headers = {"Authorization" : "bearer " + self.token}
@@ -106,6 +110,20 @@ class BlueGreen:
       return False
     return True
 
+  def notify_newrelic(self,  tag):
+    api_key = self.newrelic.get('api_key')
+    app_id = self.newrelic.get('app_id')
+    if api_key and app_id:
+      print """
+  Notifying New Relic app '%s' ...
+      """ % (app_id)
+      headers = {"Content-Type" : "application/x-www-form-urlencoded", "x-api-key" : api_key}
+      conn = httplib.HTTPConnection("api.newrelic.com")
+      conn.request("POST", "/deployments.xml", 'deployment[application_id]=' + app_id + '&deployment[revision]=' + tag, headers)
+      response = conn.getresponse()
+      return response.status == 200
+    return False
+
   def run_command(self, command, env_vars=None):
     DEVNULL = open(os.devnull, 'wb')
 
@@ -176,6 +194,8 @@ class BlueGreen:
   Application %s is live at %s ...
       """ % (apps[1], ','.join(cname))
 
+      self.notify_newrelic(tag)
+
       if not self.run_hook('after_swap', {"TAG": tag}):
           print """
   Error running 'before' hook. Pre deploy aborted.
@@ -210,7 +230,22 @@ class Config:
       except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         pass
 
-    return {'name' : app_name, 'hooks' : hooks}
+    #NewRelic
+    newrelic = {
+      'api_key': None,
+      'app_id': None
+    }
+
+    for key in newrelic:
+      try:
+        newrelic_value = config.get('NewRelic', key)
+        if newrelic_value:
+          newrelic[key] = newrelic_value
+
+      except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        pass
+
+    return {'name' : app_name, 'hooks' : hooks, 'newrelic' : newrelic}
 
 
 if __name__ == "__main__":

@@ -1,14 +1,18 @@
 # Changelog
 
-## 0.6.1 / 2015-09-26
+## 0.7.0 / 2015-10-27
+
+  - Allow to notify NewRelic deployment. Closes #12. See README instructions (Emerson Macedo)
+
+## 0.6.1 / 2015-10-26
 
   - Abort task if before hook fails. Closes #13. (Guilherme Garnier)
 
-## 0.6.0 / 2015-09-26
+## 0.6.0 / 2015-10-26
 
   - App that is not live stay with zero units. Closes #15, #8 (Guilherme Garnier and Emerson Macedo)
 
-## 0.5.0 / 2015-09-26
+## 0.5.0 / 2015-10-26
 
   - Passing TAG environment variable to hooks. Closes #14. (Guilherme Garnier and Emerson Macedo)
 
