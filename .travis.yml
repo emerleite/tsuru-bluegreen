@@ -2,5 +2,5 @@ language: python
 python:
   - "2.7"
 install: "pip install -r test_requirements.txt"
-script: nosetests test/bluegreen_test.py
+script: nosetests test/config_test.py test/bluegreen_test.py
 sudo: false
