@@ -24,6 +24,10 @@ name: <your_app>
 api_key: <newrelic_api_key>
 app_id: <newrelic_app_id>
 
+[WebHook]
+endpoint: http://example.com
+payload_extras: key1=value1&key2=value2
+
 [Hooks]
 before_pre: <command to run before 'pre' action>
 after_pre: <command to run after a successful 'pre' action>
@@ -38,6 +42,10 @@ Based on the `name` configuration value, you must have to have two tsuru applica
 ### 'NewRelic' section
 
 Notify New Relic about your deployment after swap. See [NewRelic docs](https://docs.newrelic.com/docs/apm/new-relic-apm/maintenance/deployment-notifications).
+
+### 'WebHook' section
+
+POST to a **WebHook** after deployment swap. The payload is the defined payload_extras plus **tag=<tag_value>**.
 
 ### 'Hooks' section
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0 / 2015-10-28
+
+  - Allow to invoke a WebHook after swap. Closes #16. See README isntructions (Emerson Macedo)
+
 ## 0.7.0 / 2015-10-27
 
   - Allow to notify NewRelic deployment. Closes #12. See README instructions (Emerson Macedo)
