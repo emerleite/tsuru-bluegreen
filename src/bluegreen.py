@@ -23,6 +23,10 @@ class BlueGreen:
       self.newrelic = config['newrelic']
     except KeyError:
       self.newrelic = {}
+    try:
+      self.webhook = config['webhook']
+    except KeyError:
+      self.webhook = {}
 
   def get_cname(self, app):
     headers = {"Authorization" : "bearer " + self.token}
@@ -124,6 +128,22 @@ class BlueGreen:
       return response.status == 200
     return False
 
+  def run_webhook(self, tag):
+    endpoint = self.webhook.get('endpoint')
+    payload_extras = self.webhook.get('payload_extras')
+    if endpoint and payload_extras:
+      print """
+  POSTING to WebHook '%s' ...
+      """ % (endpoint)
+      endpoint_host = urlparse(endpoint).hostname
+      endpoint_path = urlparse(endpoint).path
+      headers = {"Content-Type" : "application/x-www-form-urlencoded"}
+      conn = httplib.HTTPConnection(endpoint_host)
+      conn.request("POST", (endpoint_path or '/'), payload_extras + '&tag=' + tag, headers)
+      response = conn.getresponse()
+      return response.status == 200
+    return False
+
   def run_command(self, command, env_vars=None):
     DEVNULL = open(os.devnull, 'wb')
 
@@ -196,6 +216,8 @@ class BlueGreen:
 
       self.notify_newrelic(tag)
 
+      self.run_webhook(tag)
+
       if not self.run_hook('after_swap', {"TAG": tag}):
           print """
   Error running 'before' hook. Pre deploy aborted.
@@ -245,8 +267,22 @@ class Config:
       except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         pass
 
-    return {'name' : app_name, 'hooks' : hooks, 'newrelic' : newrelic}
+    #WebHook
+    webhook = {
+      'endpoint': None,
+      'payload_extras': None
+    }
 
+    for key in webhook:
+      try:
+        webhook_value = config.get('WebHook', key)
+        if webhook_value:
+          webhook[key] = webhook_value
+
+      except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        pass
+
+    return {'name' : app_name, 'hooks' : hooks, 'newrelic' : newrelic, 'webhook' : webhook}
 
 if __name__ == "__main__":
   #Initialization

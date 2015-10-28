@@ -22,3 +22,7 @@ class TestConfig(unittest.TestCase):
   def test_load_newrelic_config(self):
     self.assertEqual('some-api-key', self.config['newrelic']['api_key'])
     self.assertEqual('123', self.config['newrelic']['app_id'])
+
+  def test_load_webhook_config(self):
+    self.assertEqual('http://example.com', self.config['webhook']['endpoint'])
+    self.assertEqual('key1=value1&key2=value2', self.config['webhook']['payload_extras'])

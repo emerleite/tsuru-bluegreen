@@ -10,7 +10,8 @@ class TestBlueGreen(unittest.TestCase):
     config = {
       'name': 'test-app',
       'hooks': {'before_pre' : 'echo test', 'after_swap' : 'undefined_command'},
-      'newrelic': {'api_key' : 'some-api-key', 'app_id' : '123'}
+      'newrelic': {'api_key' : 'some-api-key', 'app_id' : '123'},
+      'webhook': {'endpoint': 'http://example.com', 'payload_extras': 'key1=value1&key2=value2'}
     }
 
     self.bg = BlueGreen('token', 'tsuru.globoi.com', config)
@@ -200,6 +201,26 @@ class TestBlueGreen(unittest.TestCase):
                            data='deployment[application_id]=some-api-key&deployment[revision]=1.0',
                            status=500)
     self.assertFalse(self.bg.notify_newrelic('1.0'))
+
+  @httpretty.activate
+  def test_run_webhook_when_config_defined(self):
+    httpretty.register_uri(httpretty.POST, 'http://example.com/',
+                           data='key1=value1&key2=value2&tag=1.0',
+                           content_type='application/x-www-form-urlencoded',
+                           status=200)
+
+    self.assertTrue(self.bg.run_webhook('1.0'))
+
+  def test_dont_run_webhook_when_config_undefined(self):
+    self.bg.webhook = {}
+    self.assertFalse(self.bg.run_webhook('1.0'))
+
+  @httpretty.activate
+  def test_dont_run_webhook_when_error(self):
+    httpretty.register_uri(httpretty.POST, 'http://example.com/',
+                           data='key1=value1&key2=value2&tag=1.0',
+                           status=500)
+    self.assertFalse(self.bg.run_webhook('1.0'))
 
   def test_run_command_should_return_true_on_success(self):
     self.assertTrue(self.bg.run_command('echo test'))
