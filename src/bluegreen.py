@@ -75,7 +75,16 @@ class BlueGreen:
     conn.request("GET", "/apps/" + app, "", headers)
     response = conn.getresponse()
     data = json.loads(response.read())
-    return len(data.get('units'))
+
+    units = {}
+    for unit in data.get('units'):
+        process_name = unit['ProcessName']
+        if units.has_key(process_name):
+            units[process_name] += 1
+        else:
+            units[process_name] = 1
+
+    return units
 
   def remove_units(self, app, keep=0):
     units = str(self.total_units(app) - keep)

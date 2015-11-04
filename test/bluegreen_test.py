@@ -104,20 +104,20 @@ class TestBlueGreen(unittest.TestCase):
     self.assertIsNone(self.bg.env_get('xpto', 'TAG'))
 
   @httpretty.activate
-  def test_total_units_zero_when_empty(self):
+  def test_total_units_empty_without_units(self):
     httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto',
                            body='{"units":[]}',
                            status=500)
 
-    self.assertEqual(self.bg.total_units('xpto'), 0)
+    self.assertEqual(self.bg.total_units('xpto'), {})
 
   @httpretty.activate
-  def test_total_units_gt_zero_when_not_empty(self):
+  def test_total_units_grouped_per_process_name(self):
     httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto',
-                           body='{"units":["unit1"]}',
+                           body='{"units":[{"ProcessName": "web"}, {"ProcessName": "resque"}, {"ProcessName": "web"}]}',
                            status=500)
 
-    self.assertGreater(self.bg.total_units('xpto'), 0)
+    self.assertEqual(self.bg.total_units('xpto'), {'web': 2, 'resque': 1})
 
   @httpretty.activate
   def test_remove_units_should_return_true_when_removes(self):
