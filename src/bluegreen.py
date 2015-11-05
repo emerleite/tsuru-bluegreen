@@ -106,13 +106,11 @@ class BlueGreen:
     conn = httplib.HTTPConnection(self.target)
     conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
+    response.read()
     if response.status != 200:
       print "Error removing '%s' units from %s. You'll need to remove manually." % (process_name, app)
       return False
 
-    while (self.total_units(app)[process_name] > 1):
-      print "Waiting for %s '%s' units to go down..." % (app, process_name)
-      time.sleep(1)
     return True
 
   def add_units(self, app, total_units_after_add):
