@@ -116,8 +116,14 @@ class BlueGreen:
   def add_units(self, app, total_units_after_add):
     total_units = self.total_units(app)
     results = []
-    for process_name, units in total_units.iteritems():
-      results.append(self.add_units_per_process_type(app, total_units_after_add - units, total_units_after_add, process_name))
+    for process_name, units in total_units_after_add.iteritems():
+      if total_units.has_key(process_name):
+        units_to_add = units - total_units[process_name]
+      else:
+        units_to_add = units
+
+      if units_to_add > 0:
+        results.append(self.add_units_per_process_type(app, units_to_add, units, process_name))
 
     for result in results:
       if not result:
