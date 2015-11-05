@@ -86,11 +86,11 @@ class BlueGreen:
 
     return units
 
-  def remove_units(self, app, keep=0):
+  def remove_units(self, app, units_to_keep=0):
       total_units = self.total_units(app)
       results = []
       for process_name, units in total_units.iteritems():
-          results.append(self.remove_units_per_process_type(app, str(units - keep), process_name))
+          results.append(self.remove_units_per_process_type(app, units - units_to_keep, process_name))
 
       for result in results:
           if not result:
@@ -98,13 +98,13 @@ class BlueGreen:
 
       return True
 
-  def remove_units_per_process_type(self, app, units, process_name):
+  def remove_units_per_process_type(self, app, units_to_remove, process_name):
     print """
-  Removing %s '%s' units from %s ...""" % (units, process_name, app)
+  Removing %s '%s' units from %s ...""" % (units_to_remove, process_name, app)
 
     headers = {"Content-Type" : "application/x-www-form-urlencoded", "Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
-    conn.request("DELETE", "/apps/" + app + '/units?units='+units+'&process='+process_name, '', headers)
+    conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
     if response.status != 200:
       print "Error removing '%s' units from %s. You'll need to remove manually." % (process_name, app)
@@ -115,11 +115,11 @@ class BlueGreen:
       time.sleep(1)
     return True
 
-  def add_units(self, app, current_units):
+  def add_units(self, app, total_units_after_add):
       total_units = self.total_units(app)
       results = []
       for process_name, units in total_units.iteritems():
-          results.append(self.add_units_per_process_type(app, current_units, units, process_name))
+          results.append(self.add_units_per_process_type(app, total_units_after_add - units, total_units_after_add, process_name))
 
       for result in results:
           if not result:
@@ -127,22 +127,21 @@ class BlueGreen:
 
       return True
 
-  def add_units_per_process_type(self, app, current_units, total_units, process_name):
-    units = str(int(current_units) - total_units)
+  def add_units_per_process_type(self, app, units_to_add, total_units_after_add, process_name):
     print """
-  Adding %s units to %s ...""" % (units, app)
+  Adding %s '%s' units to %s ...""" % (units_to_add, process_name, app)
 
     headers = {"Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
-    conn.request("PUT", "/apps/" + app + '/units?units='+units+'&process='+process_name, '', headers)
+    conn.request("PUT", "/apps/" + app + '/units?units=' + str(units_to_add) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
     response.read()
     if response.status != 200:
-      print "Error adding units to %s. Aborting..." % app
+      print "Error adding '%s' units to %s. Aborting..." % (process_name, app)
       return False
 
-    if (self.total_units(app)[process_name] != int(current_units)):
-      print "Error adding units to %s. Aborting..." % app
+    if (self.total_units(app)[process_name] != total_units_after_add):
+      print "Error adding '%s' units to %s. Aborting..." % (process_name, app)
       return False
     return True
 
