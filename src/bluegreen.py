@@ -114,16 +114,16 @@ class BlueGreen:
     return True
 
   def add_units(self, app, total_units_after_add):
-      total_units = self.total_units(app)
-      results = []
-      for process_name, units in total_units.iteritems():
-          results.append(self.add_units_per_process_type(app, total_units_after_add - units, total_units_after_add, process_name))
+    total_units = self.total_units(app)
+    results = []
+    for process_name, units in total_units.iteritems():
+      results.append(self.add_units_per_process_type(app, total_units_after_add - units, total_units_after_add, process_name))
 
-      for result in results:
-          if not result:
-              return False
+    for result in results:
+      if not result:
+        return False
 
-      return True
+    return True
 
   def add_units_per_process_type(self, app, units_to_add, total_units_after_add, process_name):
     print """
