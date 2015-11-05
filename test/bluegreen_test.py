@@ -120,36 +120,71 @@ class TestBlueGreen(unittest.TestCase):
     self.assertEqual(self.bg.total_units('xpto'), {'web': 2, 'resque': 1})
 
   @httpretty.activate
-  def test_remove_units_should_return_true_when_removes(self):
-    self.bg.total_units = Mock(side_effect=self.mock_total_units([2, 1]))
+  def test_remove_units_should_return_true_when_removes_web_units(self):
+    self.bg.total_units = Mock(side_effect=self.mock_total_units([{'web': 2}, {'web': 0}]))
 
     httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
-                           data='1',
+                           data='',
                            status=200)
 
     self.assertTrue(self.bg.remove_units('xpto'))
-    self.assertEqual({"units": ["2"]}, httpretty.last_request().querystring)
+    self.assertEqual({"units": ["2"], "process": ["web"]}, httpretty.last_request().querystring)
+
+  @httpretty.activate
+  def test_remove_units_should_return_true_when_removes_web_and_resque_units(self):
+    self.bg.total_units = Mock(side_effect=self.mock_total_units([{'web': 4, 'resque': 2}, {'web': 0, 'resque': 2}, {'web': 0, 'resque': 0}]))
+
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
+                           data='',
+                           status=200)
+
+    self.assertTrue(self.bg.remove_units('xpto'))
+
+    requests = httpretty.HTTPretty.latest_requests
+    self.assertEqual(len(requests), 2)
+    self.assertEqual({"units": ["4"], "process": ["web"]}, requests[0].querystring)
+    self.assertEqual({"units": ["2"], "process": ["resque"]}, requests[1].querystring)
 
   @httpretty.activate
   def test_remove_units_should_allow_keep_units(self):
-    self.bg.total_units = Mock(side_effect=self.mock_total_units([2, 1]))
+    self.bg.total_units = Mock(side_effect=self.mock_total_units([{'web': 4, 'resque': 2}, {'web': 1, 'resque': 2}, {'web': 1, 'resque': 1}]))
 
     httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
-                           data='1',
+                           data='',
                            status=200)
 
     self.assertTrue(self.bg.remove_units('xpto', 1))
-    self.assertEqual({"units": ["1"]}, httpretty.last_request().querystring)
+
+    requests = httpretty.HTTPretty.latest_requests
+    self.assertEqual(len(requests), 2)
+    self.assertEqual({"units": ["3"], "process": ["web"]}, requests[0].querystring)
+    self.assertEqual({"units": ["1"], "process": ["resque"]}, requests[1].querystring)
 
   @httpretty.activate
-  def test_remove_units_should_return_false_when_not_removes(self):
-    self.bg.total_units = MagicMock(return_value=2)
+  def test_remove_units_should_return_false_when_doesnt_remove(self):
+    self.bg.total_units = MagicMock(return_value={'web': 2})
 
     httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
-                           data='1',
+                           data='',
                            status=500)
 
     self.assertFalse(self.bg.remove_units('xpto'))
+
+  @httpretty.activate
+  def test_remove_units_should_return_false_when_doesnt_remove_all_process_types(self):
+    self.bg.total_units = MagicMock(return_value={'web': 2, 'resque': 1})
+
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
+                           data='',
+                           responses=[
+                               httpretty.Response(body='', status=500),
+                               httpretty.Response(body='', status=200)
+                           ])
+
+    self.assertFalse(self.bg.remove_units('xpto'))
+
+    requests = httpretty.HTTPretty.latest_requests
+    self.assertEqual(len(requests), 2)
 
   @httpretty.activate
   def test_add_units_should_return_true_when_adds(self):

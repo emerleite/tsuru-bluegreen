@@ -87,20 +87,31 @@ class BlueGreen:
     return units
 
   def remove_units(self, app, keep=0):
-    units = str(self.total_units(app) - keep)
-    print """
-  Removing %s units from %s ...""" % (units, app)
+      total_units = self.total_units(app)
+      results = []
+      for process_name, units in total_units.iteritems():
+          results.append(self.remove_units_per_process_type(app, str(units - keep), process_name))
 
-    headers = {"Authorization" : "bearer " + self.token}
+      for result in results:
+          if not result:
+              return False
+
+      return True
+
+  def remove_units_per_process_type(self, app, units, process_name):
+    print """
+  Removing %s '%s' units from %s ...""" % (units, process_name, app)
+
+    headers = {"Content-Type" : "application/x-www-form-urlencoded", "Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
-    conn.request("DELETE", "/apps/" + app + '/units?units='+units, units, headers)
+    conn.request("DELETE", "/apps/" + app + '/units?units='+units+'&process='+process_name, '', headers)
     response = conn.getresponse()
     if response.status != 200:
-      print "Error removing units from %s. You'll need to remove manually." % app
+      print "Error removing '%s' units from %s. You'll need to remove manually." % (process_name, app)
       return False
 
-    while (self.total_units(app) > 1):
-      print "Waiting for %s units to go down..." % app
+    while (self.total_units(app)[process_name] > 1):
+      print "Waiting for %s '%s' units to go down..." % (app, process_name)
       time.sleep(1)
     return True
 
