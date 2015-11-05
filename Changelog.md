@@ -1,8 +1,12 @@
 # Changelog
 
+## 0.9.0 / 2015-11-05
+
+  - Add support for apps with more than one process type. Closes #17. See README instructions (Guilherme Garnier)
+
 ## 0.8.0 / 2015-10-28
 
-  - Allow to invoke a WebHook after swap. Closes #16. See README isntructions (Emerson Macedo)
+  - Allow to invoke a WebHook after swap. Closes #16. See README instructions (Emerson Macedo)
 
 ## 0.7.0 / 2015-10-27
 
