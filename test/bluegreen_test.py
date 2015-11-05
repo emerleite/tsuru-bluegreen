@@ -187,25 +187,57 @@ class TestBlueGreen(unittest.TestCase):
     self.assertEqual(len(requests), 2)
 
   @httpretty.activate
-  def test_add_units_should_return_true_when_adds(self):
-    self.bg.total_units = MagicMock(side_effect=self.mock_total_units([1, 2]))
+  def test_add_units_should_return_true_when_adds_web_units(self):
+    self.bg.total_units = MagicMock(side_effect=self.mock_total_units([{'web': 1}, {'web': 2}]))
 
-    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units?units=1',
-                           data='1',
+    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
+                           data='',
                            status=200)
 
     self.assertTrue(self.bg.add_units('xpto', 2))
-    self.assertEqual({"units": ["1"]}, httpretty.last_request().querystring)
+
+    self.assertEqual({"units": ["1"], "process": ["web"]}, httpretty.last_request().querystring)
 
   @httpretty.activate
-  def test_add_units_should_return_false_when_adds(self):
-    self.bg.total_units = MagicMock(return_value=1)
+  def test_add_units_should_return_true_when_adds_web_and_resque_units(self):
+    self.bg.total_units = MagicMock(side_effect=self.mock_total_units([{'web': 2, 'resque': 1}, {'web': 5, 'resque': 1}, {'web': 5, 'resque': 5}]))
 
     httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
-                           data='1',
+                           data='',
+                           status=200)
+
+    self.assertTrue(self.bg.add_units('xpto', 5))
+
+    requests = httpretty.HTTPretty.latest_requests
+    self.assertEqual(len(requests), 2)
+    self.assertEqual({"units": ["3"], "process": ["web"]}, requests[0].querystring)
+    self.assertEqual({"units": ["4"], "process": ["resque"]}, requests[1].querystring)
+
+  @httpretty.activate
+  def test_add_units_should_return_false_when_doesnt_add(self):
+    self.bg.total_units = MagicMock(return_value={'web': 2})
+
+    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
+                           data='',
                            status=500)
 
     self.assertFalse(self.bg.add_units('xpto', 2))
+
+  @httpretty.activate
+  def test_remove_units_should_return_false_when_doesnt_add_all_process_types(self):
+    self.bg.total_units = MagicMock(return_value={'web': 2, 'resque': 1})
+
+    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
+                           data='',
+                           responses=[
+                               httpretty.Response(body='', status=500),
+                               httpretty.Response(body='', status=200)
+                           ])
+
+    self.assertFalse(self.bg.add_units('xpto', 3))
+
+    requests = httpretty.HTTPretty.latest_requests
+    self.assertEqual(len(requests), 2)
 
   @httpretty.activate
   def test_notify_newrelic_when_config_defined(self):

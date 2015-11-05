@@ -116,20 +116,32 @@ class BlueGreen:
     return True
 
   def add_units(self, app, current_units):
-    units = str(int(current_units) - self.total_units(app))
+      total_units = self.total_units(app)
+      results = []
+      for process_name, units in total_units.iteritems():
+          results.append(self.add_units_per_process_type(app, current_units, units, process_name))
+
+      for result in results:
+          if not result:
+              return False
+
+      return True
+
+  def add_units_per_process_type(self, app, current_units, total_units, process_name):
+    units = str(int(current_units) - total_units)
     print """
   Adding %s units to %s ...""" % (units, app)
 
     headers = {"Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
-    conn.request("PUT", "/apps/" + app + '/units?units='+units, units, headers)
+    conn.request("PUT", "/apps/" + app + '/units?units='+units+'&process='+process_name, '', headers)
     response = conn.getresponse()
     response.read()
     if response.status != 200:
       print "Error adding units to %s. Aborting..." % app
       return False
 
-    if (self.total_units(app) != int(current_units)):
+    if (self.total_units(app)[process_name] != int(current_units)):
       print "Error adding units to %s. Aborting..." % app
       return False
     return True
