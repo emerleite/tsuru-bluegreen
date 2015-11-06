@@ -106,26 +106,30 @@ class BlueGreen:
     conn = httplib.HTTPConnection(self.target)
     conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
+    response.read()
     if response.status != 200:
       print "Error removing '%s' units from %s. You'll need to remove manually." % (process_name, app)
       return False
 
-    while (self.total_units(app)[process_name] > 1):
-      print "Waiting for %s '%s' units to go down..." % (app, process_name)
-      time.sleep(1)
     return True
 
   def add_units(self, app, total_units_after_add):
-      total_units = self.total_units(app)
-      results = []
-      for process_name, units in total_units.iteritems():
-          results.append(self.add_units_per_process_type(app, total_units_after_add - units, total_units_after_add, process_name))
+    total_units = self.total_units(app)
+    results = []
+    for process_name, units in total_units_after_add.iteritems():
+      if total_units.has_key(process_name):
+        units_to_add = units - total_units[process_name]
+      else:
+        units_to_add = units
 
-      for result in results:
-          if not result:
-              return False
+      if units_to_add > 0:
+        results.append(self.add_units_per_process_type(app, units_to_add, units, process_name))
 
-      return True
+    for result in results:
+      if not result:
+        return False
+
+    return True
 
   def add_units_per_process_type(self, app, units_to_add, total_units_after_add, process_name):
     print """
