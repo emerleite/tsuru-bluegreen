@@ -194,24 +194,38 @@ class TestBlueGreen(unittest.TestCase):
                            data='',
                            status=200)
 
-    self.assertTrue(self.bg.add_units('xpto', 2))
+    self.assertTrue(self.bg.add_units('xpto', {'web': 2}))
 
     self.assertEqual({"units": ["1"], "process": ["web"]}, httpretty.last_request().querystring)
 
   @httpretty.activate
   def test_add_units_should_return_true_when_adds_web_and_resque_units(self):
-    self.bg.total_units = MagicMock(side_effect=self.mock_total_units([{'web': 2, 'resque': 1}, {'web': 5, 'resque': 1}, {'web': 5, 'resque': 5}]))
+    self.bg.total_units = MagicMock(side_effect=self.mock_total_units([{'web': 2, 'resque': 1}, {'web': 5, 'resque': 1}, {'web': 5, 'resque': 2}]))
 
     httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
                            data='',
                            status=200)
 
-    self.assertTrue(self.bg.add_units('xpto', 5))
+    self.assertTrue(self.bg.add_units('xpto', {'web': 5, 'resque': 2}))
 
     requests = httpretty.HTTPretty.latest_requests
     self.assertEqual(len(requests), 2)
     self.assertEqual({"units": ["3"], "process": ["web"]}, requests[0].querystring)
-    self.assertEqual({"units": ["4"], "process": ["resque"]}, requests[1].querystring)
+    self.assertEqual({"units": ["1"], "process": ["resque"]}, requests[1].querystring)
+
+  @httpretty.activate
+  def test_add_units_should_return_true_when_adds_only_web_units(self):
+    self.bg.total_units = MagicMock(side_effect=self.mock_total_units([{'web': 2, 'resque': 1}, {'web': 5, 'resque': 1}]))
+
+    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
+                           data='',
+                           status=200)
+
+    self.assertTrue(self.bg.add_units('xpto', {'web': 5, 'resque': 1}))
+
+    requests = httpretty.HTTPretty.latest_requests
+    self.assertEqual(len(requests), 1)
+    self.assertEqual({"units": ["3"], "process": ["web"]}, requests[0].querystring)
 
   @httpretty.activate
   def test_add_units_should_return_false_when_doesnt_add(self):
@@ -221,7 +235,7 @@ class TestBlueGreen(unittest.TestCase):
                            data='',
                            status=500)
 
-    self.assertFalse(self.bg.add_units('xpto', 2))
+    self.assertFalse(self.bg.add_units('xpto', {'web': 3}))
 
   @httpretty.activate
   def test_remove_units_should_return_false_when_doesnt_add_all_process_types(self):
@@ -234,7 +248,7 @@ class TestBlueGreen(unittest.TestCase):
                                httpretty.Response(body='', status=200)
                            ])
 
-    self.assertFalse(self.bg.add_units('xpto', 3))
+    self.assertFalse(self.bg.add_units('xpto', {'web': 3, 'resque': 2}))
 
     requests = httpretty.HTTPretty.latest_requests
     self.assertEqual(len(requests), 2)
