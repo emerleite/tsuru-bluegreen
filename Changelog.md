@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1 / 2015-11-06
+
+  - Improved add_units. Now it receives a hash. Refs #17. (Gabriel Parreiras)
+
 ## 0.9.0 / 2015-11-05
 
   - Add support for apps with more than one process type. Closes #17. See README instructions (Guilherme Garnier)
