@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0 / 2016-02-25
+
+  - Avoid application restart when env-set. Refs https://github.com/tsuru/tsuru/issues/1271. (Emerson Macedo)
+
 ## 0.9.1 / 2015-11-06
 
   - Improved add_units. Now it receives a hash. Refs #17. (Gabriel Parreiras)
