@@ -65,17 +65,19 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_env_set_return_true_when_can_set(self):
-    httpretty.register_uri(httpretty.POST, 'http://tsuru.globoi.com/apps/xpto/env',
+    httpretty.register_uri(httpretty.POST, 'http://tsuru.globoi.com/apps/xpto/env?noRestart=true',
                            data='{"TAG":"tag_value"}',
-                           status=200)
+                           status=200,
+                           match_querystring=True)
 
     self.assertTrue(self.bg.env_set('xpto', 'TAG', 'tag_value'))
 
   @httpretty.activate
   def test_env_set_return_false_when_cant_set(self):
-    httpretty.register_uri(httpretty.POST, 'http://tsuru.globoi.com/apps/xpto/env',
+    httpretty.register_uri(httpretty.POST, 'http://tsuru.globoi.com/apps/xpto/env?noRestart=true',
                            data='{"TAG":"tag_value"}',
-                           status=500)
+                           status=500,
+                           match_querystring=True)
 
     self.assertFalse(self.bg.env_set('xpto', 'TAG', 'tag_value'))
 
