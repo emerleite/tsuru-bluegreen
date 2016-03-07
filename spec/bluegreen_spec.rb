@@ -113,10 +113,17 @@ describe BlueGreen do
       expect(subject.env_get("xpto", "TAG")).to eql "1.0"
     end
 
-    it "returns nil for env without matching value" do
+    it "returns nil for null values" do
       stub_request(:get, "#{target}apps/xpto/env")
         .with(body: data.to_json, headers: headers)
         .to_return(body: "null")
+      expect(subject.env_get("xpto", "TAG")).to be_nil
+    end
+
+    it "returns nil for env without matching value" do
+      stub_request(:get, "#{target}apps/xpto/env")
+        .with(body: data.to_json, headers: headers)
+        .to_return(body: "[]")
       expect(subject.env_get("xpto", "TAG")).to be_nil
     end
   end

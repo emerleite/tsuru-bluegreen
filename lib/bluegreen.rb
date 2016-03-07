@@ -52,7 +52,7 @@ class BlueGreen
     return if res.body === "null"
 
     values = JSON.parse(res.body)
-    values[0]["value"]
+    values[0]["value"] if values.length > 0
   end
 
   private
