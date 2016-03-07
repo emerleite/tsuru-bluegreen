@@ -55,6 +55,14 @@ class BlueGreen
     values[0]["value"] if values.length > 0
   end
 
+  def total_units(app)
+    uri = URI("#{@target}apps/#{app}")
+    req = Net::HTTP::Get.new(uri.request_uri, headers)
+    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+    units = JSON.parse(res.body)["units"]
+    return units if units.length > 0
+  end
+
   private
   def headers
     {"Content-Type" => "application/json", "Authorization" => "bearer #{@token}"}

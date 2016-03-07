@@ -127,4 +127,15 @@ describe BlueGreen do
       expect(subject.env_get("xpto", "TAG")).to be_nil
     end
   end
+
+  describe "#total_units" do
+    context "without units" do
+      it "returns nil" do
+        stub_request(:get, "#{target}apps/xpto")
+          .with(headers: headers)
+          .to_return(body: '{"units":[]}')
+        expect(subject.total_units("xpto")).to be_nil
+      end
+    end
+  end
 end
