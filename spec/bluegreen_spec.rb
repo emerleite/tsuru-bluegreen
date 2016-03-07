@@ -61,4 +61,24 @@ describe BlueGreen do
       expect(subject.remove_cname(["cname1", "cname2"])).to be_falsy
     end
   end
+
+  describe "#set_cname" do
+    let :cnames do
+      {"cname" => ["cname1", "cname2"]}
+    end
+
+    it "should return true when can remove" do
+      stub_request(:post, "#{target}apps/xpto/cname")
+        .with(body: cnames.to_json, headers: headers)
+        .to_return(status: 200, body: "")
+      expect(subject.set_cname(["cname1", "cname2"])).to be_truthy
+    end
+
+    it "should return false when can't remove" do
+      stub_request(:post, "#{target}apps/xpto/cname")
+        .with(body: cnames.to_json, headers: headers)
+        .to_return(status: 500, body: "")
+      expect(subject.set_cname(["cname1", "cname2"])).to be_falsy
+    end
+  end
 end
