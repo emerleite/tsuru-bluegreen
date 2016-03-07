@@ -3,7 +3,6 @@ require 'spec_helper'
 describe BlueGreen do
   let :config do
     {
-      'name' => 'xpto',
       'hooks' => {'before_pre'  => 'echo test', 'after_swap'  => 'undefined_command'},
       'newrelic' => {'api_key'  => 'some-api-key', 'app_id'  => '123'},
       'webhook' => {'endpoint' => 'http://example.com', 'payload_extras' => 'key1=value1&key2=value2'}
@@ -31,14 +30,14 @@ describe BlueGreen do
       stub_request(:get, "#{target}apps/xpto")
         .with(headers: headers)
         .to_return(body: '{"cname":["cname1", "cname2"]}')
-      expect(subject.get_cname).to eql ["cname1", "cname2"]
+      expect(subject.get_cname("xpto")).to eql ["cname1", "cname2"]
     end
 
     it "should return nil when cname list is empty" do
       stub_request(:get, "#{target}apps/xpto")
         .with(headers: headers)
         .to_return(body: '{"cname":[]}')
-      expect(subject.get_cname).to be_nil
+      expect(subject.get_cname("xpto")).to be_nil
     end
   end
 
@@ -51,14 +50,14 @@ describe BlueGreen do
       stub_request(:delete, "#{target}apps/xpto/cname")
         .with(body: cnames.to_json, headers: headers)
         .to_return(status: 200, body: "")
-      expect(subject.remove_cname(["cname1", "cname2"])).to be_truthy
+      expect(subject.remove_cname("xpto", ["cname1", "cname2"])).to be_truthy
     end
 
     it "should return false when can't remove" do
       stub_request(:delete, "#{target}apps/xpto/cname")
         .with(body: cnames.to_json, headers: headers)
         .to_return(status: 500, body: "")
-      expect(subject.remove_cname(["cname1", "cname2"])).to be_falsy
+      expect(subject.remove_cname("xpto", ["cname1", "cname2"])).to be_falsy
     end
   end
 
@@ -71,14 +70,14 @@ describe BlueGreen do
       stub_request(:post, "#{target}apps/xpto/cname")
         .with(body: cnames.to_json, headers: headers)
         .to_return(status: 200, body: "")
-      expect(subject.set_cname(["cname1", "cname2"])).to be_truthy
+      expect(subject.set_cname("xpto", ["cname1", "cname2"])).to be_truthy
     end
 
     it "should return false when can't remove" do
       stub_request(:post, "#{target}apps/xpto/cname")
         .with(body: cnames.to_json, headers: headers)
         .to_return(status: 500, body: "")
-      expect(subject.set_cname(["cname1", "cname2"])).to be_falsy
+      expect(subject.set_cname("xpto", ["cname1", "cname2"])).to be_falsy
     end
   end
 
@@ -91,14 +90,14 @@ describe BlueGreen do
       stub_request(:post, "#{target}apps/xpto/env?noRestart=true")
         .with(body: data.to_json, headers: headers)
         .to_return(status: 200, body: "")
-      expect(subject.env_set("TAG", "tag_value")).to be_truthy
+      expect(subject.env_set("xpto", "TAG", "tag_value")).to be_truthy
     end
 
     it "should return false when can't remove" do
       stub_request(:post, "#{target}apps/xpto/env?noRestart=true")
         .with(body: data.to_json, headers: headers)
         .to_return(status: 500, body: "")
-      expect(subject.env_set("TAG", "tag_value")).to be_falsy
+      expect(subject.env_set("xpto", "TAG", "tag_value")).to be_falsy
     end
   end
 end
