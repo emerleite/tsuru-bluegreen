@@ -29,7 +29,7 @@ class BlueGreen
   end
 
   def set_cname(app, cnames)
-    uri = URI("#{@target}apps/#{napp}/cname")
+    uri = URI("#{@target}apps/#{app}/cname")
     req = Net::HTTP::Post.new(uri.request_uri, headers)
     req.body = {"cname" => cnames}.to_json
     res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
