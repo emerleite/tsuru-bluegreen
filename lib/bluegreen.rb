@@ -44,6 +44,17 @@ class BlueGreen
     return res.code.to_i == 200
   end
 
+  def env_get(app, key)
+    uri = URI("#{@target}apps/#{app}/env")
+    req = Net::HTTP::Get.new(uri.request_uri, headers)
+    req.body = [key].to_json
+    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+    return if res.body === "null"
+
+    values = JSON.parse(res.body)
+    values[0]["value"]
+  end
+
   private
   def headers
     {"Content-Type" => "application/json", "Authorization" => "bearer #{@token}"}

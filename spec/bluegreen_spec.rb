@@ -45,7 +45,7 @@ describe BlueGreen do
     let :cnames do
       {"cname" => ["cname1", "cname2"]}
     end
-    
+
     it "should return true when can remove" do
       stub_request(:delete, "#{target}apps/xpto/cname")
         .with(body: cnames.to_json, headers: headers)
@@ -98,6 +98,26 @@ describe BlueGreen do
         .with(body: data.to_json, headers: headers)
         .to_return(status: 500, body: "")
       expect(subject.env_set("xpto", "TAG", "tag_value")).to be_falsy
+    end
+  end
+
+  describe "#env_get" do
+    let :data do
+      ["TAG"]
+    end
+
+    it "returns a value when present" do
+      stub_request(:get, "#{target}apps/xpto/env")
+        .with(body: data.to_json, headers: headers)
+        .to_return(body: '[{"name":"TAG", "public":true, "value":"1.0"}]')
+      expect(subject.env_get("xpto", "TAG")).to eql "1.0"
+    end
+
+    it "returns nil for env without matching value" do
+      stub_request(:get, "#{target}apps/xpto/env")
+        .with(body: data.to_json, headers: headers)
+        .to_return(body: "null")
+      expect(subject.env_get("xpto", "TAG")).to be_nil
     end
   end
 end
