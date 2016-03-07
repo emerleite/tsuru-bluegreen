@@ -129,13 +129,19 @@ describe BlueGreen do
   end
 
   describe "#total_units" do
-    context "without units" do
-      it "returns nil" do
-        stub_request(:get, "#{target}apps/xpto")
-          .with(headers: headers)
-          .to_return(body: '{"units":[]}')
-        expect(subject.total_units("xpto")).to be_nil
-      end
+    it "returns a empty hash when units is empty" do
+      stub_request(:get, "#{target}apps/xpto")
+        .with(headers: headers)
+        .to_return(body: '{"units":[]}')
+      expect(subject.total_units("xpto")).to eql({})
+    end
+
+    it "returns units grouped per process name" do
+      stub_request(:get, "#{target}apps/xpto")
+        .with(headers: headers)
+        .to_return(body: '{"units":[{"ProcessName": "web"}, {"ProcessName": "resque"}, {"ProcessName": "web"}]}')
+
+      expect(subject.total_units("xpto")).to eql({"web" => 2, "resque" => 1})
     end
   end
 end

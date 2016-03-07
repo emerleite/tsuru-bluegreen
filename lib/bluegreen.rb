@@ -60,7 +60,12 @@ class BlueGreen
     req = Net::HTTP::Get.new(uri.request_uri, headers)
     res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
     units = JSON.parse(res.body)["units"]
-    return units if units.length > 0
+    process_count = {}
+    units.map do |unit|
+      process_name = unit["ProcessName"]
+      process_count[process_name] ? process_count[process_name] += 1 : process_count[process_name] = 1
+    end
+    process_count
   end
 
   private
