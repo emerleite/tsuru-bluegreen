@@ -81,4 +81,24 @@ describe BlueGreen do
       expect(subject.set_cname(["cname1", "cname2"])).to be_falsy
     end
   end
+
+  describe "#env_set" do
+    let :data do
+      {"TAG" => "tag_value"}
+    end
+
+    it "should return true when can remove" do
+      stub_request(:post, "#{target}apps/xpto/env?noRestart=true")
+        .with(body: data.to_json, headers: headers)
+        .to_return(status: 200, body: "")
+      expect(subject.env_set("TAG", "tag_value")).to be_truthy
+    end
+
+    it "should return false when can't remove" do
+      stub_request(:post, "#{target}apps/xpto/env?noRestart=true")
+        .with(body: data.to_json, headers: headers)
+        .to_return(status: 500, body: "")
+      expect(subject.env_set("TAG", "tag_value")).to be_falsy
+    end
+  end
 end
