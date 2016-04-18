@@ -144,4 +144,26 @@ describe BlueGreen do
       expect(subject.total_units("xpto")).to eql({"web" => 2, "resque" => 1})
     end
   end
+
+  describe "#remove_units" do
+    before(:each) do
+      stub_request(:delete, "#{target}apps/xpto/units?units=2&process=web")
+        .with(headers: headers.merge({"Content-Type" => "application/x-www-form-urlencoded"}))
+        .to_return(status: 200, body: "")
+
+      stub_request(:delete, "#{target}apps/xpto/units?units=1&process=resque")
+        .with(headers: headers.merge({"Content-Type" => "application/x-www-form-urlencoded"}))
+        .to_return(status: 200, body: "")
+    end
+
+    it "returns true when removes web units" do
+      allow(subject).to receive(:total_units).and_return({'web' => 2})
+      expect(subject.remove_units("xpto")).to eql(true)
+    end
+
+    it "returns true when removes web and resque units" do
+      allow(subject).to receive(:total_units).and_return({'web' => 2, 'resque' => 1})
+      expect(subject.remove_units("xpto")).to eql(true)
+    end
+  end
 end

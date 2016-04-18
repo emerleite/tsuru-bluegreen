@@ -1,6 +1,7 @@
 require 'yaml'
 require 'json'
 require 'net/http'
+require 'debugger'
 
 class BlueGreen
   def initialize(token, target, config)
@@ -68,14 +69,33 @@ class BlueGreen
     process_count
   end
 
+  def remove_units(app, units_to_keep=0)
+      total_units = total_units(app)
+      results = total_units.map do |process_name, units|
+        remove_units_per_process_type(app, units - units_to_keep, process_name)
+      end
+      results.all?
+  end
+
+
   private
+  def remove_units_per_process_type(app, units_to_remove, process_name)
+    puts "Removing #{units_to_remove} '#{process_name}' units from #{app}"
+
+    uri = URI("#{@target}apps/#{app}/units?units=#{units_to_remove}&process=#{process_name}")
+    req = Net::HTTP::Delete.new(uri.request_uri, headers.merge({"Content-Type" => "application/x-www-form-urlencoded"}))
+    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+
+    if res.code.to_i != 200
+      puts "Error removing '#{process_name}' units from #{app}. You'll need to remove manually."
+      return false
+    end
+
+    return true
+  end
+
   def headers
     {"Content-Type" => "application/json", "Authorization" => "bearer #{@token}"}
   end
 end
-
-
-
-
-
 
