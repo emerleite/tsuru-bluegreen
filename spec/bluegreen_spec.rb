@@ -250,6 +250,42 @@ describe BlueGreen do
     end
   end
 
+  describe "#notify_newrelic" do
+    let(:url) { "http://api.newrelic.com/deployments.xml"}
+    let(:api_key) { 'some-api-key' }
+    let(:headers_newrelic) { {"Content-Type" =>  "application/x-www-form-urlencoded", "x-api-key" =>  api_key}}
+
+
+    it "notifies newrelic when config defined" do
+      stub_request(:post, url)
+        .with(body:  {"deployment"=>{"application_id"=>"123", "revision"=>"1.0"}}, headers: headers.merge(headers_newrelic))
+        .to_return(status: 200, body: "")
+
+      expect(subject.notify_newrelic('1.0')).to be_truthy
+    end
+
+    it "doesnt notifies newrelic when config is not defined" do
+      subject.instance_variable_set("@newrelic", {})
+      expect(subject.notify_newrelic('1.0')).to be_falsy
+    end
+
+    it "doesnt notifies newrelic when wrong api key" do
+      stub_request(:post, url)
+        .with(body:  {"deployment"=>{"application_id"=>"123", "revision"=>"1.0"}}, headers: headers.merge(headers_newrelic))
+        .to_return(status: 403, body: "")
+
+      expect(subject.notify_newrelic('1.0')).to be_falsy
+    end
+
+    it "doesnt notifies newrelic when error" do
+      stub_request(:post, url)
+        .with(body:  {"deployment"=>{"application_id"=>"123", "revision"=>"1.0"}}, headers: headers.merge(headers_newrelic))
+        .to_return(status: 500, body: "")
+
+      expect(subject.notify_newrelic('1.0')).to be_falsy
+    end
+  end
+
   describe "#request" do
     let(:headers_form) { headers.merge({"Content-Type" => "application/x-www-form-urlencoded"})}
     it 'makes a http request' do

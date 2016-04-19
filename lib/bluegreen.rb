@@ -1,6 +1,7 @@
 require 'yaml'
 require 'json'
 require 'net/http'
+require 'logger'
 require 'debugger'
 
 class BlueGreen
@@ -11,6 +12,9 @@ class BlueGreen
     @hooks = config["hooks"] || {}
     @newrelic = config["newrelic"] || {}
     @webhook = config["newrelic"] || {}
+
+    @logger = Logger.new(STDOUT)
+    @logger.level = Logger::INFO
   end
 
   def get_cname(app)
@@ -78,6 +82,21 @@ class BlueGreen
     results.compact.all?
   end
 
+  def notify_newrelic(tag)
+    api_key = @newrelic['api_key']
+    app_id = @newrelic['app_id']
+
+    if api_key && app_id
+      @logger.info("Notifying New Relic app '#{app_id}'")
+
+      headers = {"Content-Type" =>  "application/x-www-form-urlencoded", "x-api-key" =>  api_key}
+      res = request(:post, "http://api.newrelic.com/deployments.xml", payload: "deployment[application_id]=#{app_id}&deployment[revision]=#{tag}", headers: headers)
+      return res.code.to_i == 200
+    end
+
+    return false
+  end
+
   private
 
   def add_units_per_process_type(app, units_to_add, total_units_after_add, process_name)
@@ -114,7 +133,11 @@ class BlueGreen
 
     uri = URI(url)
     req = request_class.new(uri.request_uri, default_headers.merge(headers))
-    req.body = payload.to_json if payload.length > 0
+    if payload.class == String
+      req.body = payload
+    else
+      req.body = payload.to_json if payload.length > 0
+    end
 
     Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
   end
