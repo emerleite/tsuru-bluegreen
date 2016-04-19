@@ -14,42 +14,25 @@ class BlueGreen
   end
 
   def get_cname(app)
-    uri = URI("#{@target}apps/#{app}")
-    req = Net::HTTP::Get.new(uri.request_uri, headers)
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+    res = request(:get, "#{@target}apps/#{app}")
     cnames = JSON.parse(res.body)["cname"]
     return cnames if cnames.length > 0
   end
 
   def remove_cname(app, cnames)
-    uri = URI("#{@target}apps/#{app}/cname")
-    req = Net::HTTP::Delete.new(uri.request_uri, headers)
-    req.body = {"cname" => cnames}.to_json
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-    return res.code.to_i == 200
+    return request(:delete, "#{@target}apps/#{app}/cname", payload: {"cname" => cnames}).code.to_i == 200
   end
 
   def set_cname(app, cnames)
-    uri = URI("#{@target}apps/#{app}/cname")
-    req = Net::HTTP::Post.new(uri.request_uri, headers)
-    req.body = {"cname" => cnames}.to_json
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-    return res.code.to_i == 200
+    return request(:post, "#{@target}apps/#{app}/cname", payload: {"cname" => cnames}).code.to_i == 200
   end
 
   def env_set(app, key, value)
-    uri = URI("#{@target}apps/#{app}/env?noRestart=true")
-    req = Net::HTTP::Post.new(uri.request_uri, headers)
-    req.body = {key => value}.to_json
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-    return res.code.to_i == 200
+    return request(:post, "#{@target}apps/#{app}/env?noRestart=true", payload: {key => value}).code.to_i == 200
   end
 
   def env_get(app, key)
-    uri = URI("#{@target}apps/#{app}/env")
-    req = Net::HTTP::Get.new(uri.request_uri, headers)
-    req.body = [key].to_json
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+    res = request(:get, "#{@target}apps/#{app}/env", payload: [key])
     return if res.body === "null"
 
     values = JSON.parse(res.body)
@@ -57,15 +40,14 @@ class BlueGreen
   end
 
   def total_units(app)
-    uri = URI("#{@target}apps/#{app}")
-    req = Net::HTTP::Get.new(uri.request_uri, headers)
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-    units = JSON.parse(res.body)["units"]
+    units = JSON.parse(request(:get, "#{@target}apps/#{app}").body)["units"]
+
     process_count = {}
-    units.map do |unit|
+    units.each do |unit|
       process_name = unit["ProcessName"]
       process_count[process_name] ? process_count[process_name] += 1 : process_count[process_name] = 1
     end
+
     process_count
   end
 
@@ -99,9 +81,7 @@ class BlueGreen
   private
 
   def add_units_per_process_type(app, units_to_add, total_units_after_add, process_name)
-    uri = URI("#{@target}apps/#{app}/units?units=#{units_to_add}&process=#{process_name}")
-    req = Net::HTTP::Put.new(uri.request_uri, headers)
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+    res = request(:put, "#{@target}apps/#{app}/units?units=#{units_to_add}&process=#{process_name}")
 
     if (res.code.to_i != 200) || (total_units(app)[process_name] != total_units_after_add)
       puts "Error adding '#{units_to_add}' units to #{process_name} process in #{app}. Aborting..."
@@ -112,9 +92,7 @@ class BlueGreen
   end
 
   def remove_units_per_process_type(app, units_to_remove, process_name)
-    uri = URI("#{@target}apps/#{app}/units?units=#{units_to_remove}&process=#{process_name}")
-    req = Net::HTTP::Delete.new(uri.request_uri, headers.merge({"Content-Type" => "application/x-www-form-urlencoded"}))
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+    res = request(:delete, "#{@target}apps/#{app}/units?units=#{units_to_remove}&process=#{process_name}", headers: {"Content-Type" => "application/x-www-form-urlencoded"})
 
     if res.code.to_i != 200
       puts "Error removing '#{process_name}' units from #{app}. You'll need to remove manually."
@@ -124,8 +102,21 @@ class BlueGreen
     return true
   end
 
-  def headers
+  def default_headers
     {"Content-Type" => "application/json", "Authorization" => "bearer #{@token}"}
+  end
+
+  def request(method, url, params={})
+    headers = params[:headers] || {}
+    payload = params[:payload] || {}
+
+    request_class = Net::HTTP.const_get(method.to_s.capitalize)
+
+    uri = URI(url)
+    req = request_class.new(uri.request_uri, default_headers.merge(headers))
+    req.body = payload.to_json if payload.length > 0
+
+    Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
   end
 end
 

@@ -249,4 +249,16 @@ describe BlueGreen do
       expect(subject.add_units("xpto", {'web' => 3, 'resque' => 2})).to be_falsy
     end
   end
+
+  describe "#request" do
+    let(:headers_form) { headers.merge({"Content-Type" => "application/x-www-form-urlencoded"})}
+    it 'makes a http request' do
+      url =  'http://example.com?units=1'
+      stub_request(:put, url)
+        .with(query: {units: 1}, headers: headers.merge(headers_form))
+        .to_return(status: 200, body: "{}")
+
+      expect(subject.send(:request, :put, url, {headers: headers_form}))
+    end
+  end
 end
