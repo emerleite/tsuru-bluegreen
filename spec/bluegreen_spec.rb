@@ -146,24 +146,52 @@ describe BlueGreen do
   end
 
   describe "#remove_units" do
-    before(:each) do
-      stub_request(:delete, "#{target}apps/xpto/units?units=2&process=web")
-        .with(headers: headers.merge({"Content-Type" => "application/x-www-form-urlencoded"}))
-        .to_return(status: 200, body: "")
-
-      stub_request(:delete, "#{target}apps/xpto/units?units=1&process=resque")
-        .with(headers: headers.merge({"Content-Type" => "application/x-www-form-urlencoded"}))
-        .to_return(status: 200, body: "")
-    end
+    let(:url) { "#{target}apps/xpto/units"}
+    let(:headers_form) { headers.merge({"Content-Type" => "application/x-www-form-urlencoded"})}
 
     it "returns true when removes web units" do
+      stub_request(:delete, url)
+        .with(query: {units: 2, process: :web}, headers: headers_form)
+        .to_return(status: 200, body: "")
+
       allow(subject).to receive(:total_units).and_return({'web' => 2})
       expect(subject.remove_units("xpto")).to eql(true)
     end
 
     it "returns true when removes web and resque units" do
+      stub_request(:delete, url)
+        .with(query: {units: 2, process: :web}, headers: headers_form)
+        .to_return(status: 200, body: "")
+      stub_request(:delete, url)
+        .with(query: {units: 1, process: :resque}, headers: headers_form)
+        .to_return(status: 200, body: "")
+
       allow(subject).to receive(:total_units).and_return({'web' => 2, 'resque' => 1})
       expect(subject.remove_units("xpto")).to eql(true)
+    end
+
+    it "allows keep units" do
+      stub_request(:delete, url)
+        .with(query: {units: 3, process: :web}, headers: headers_form)
+        .to_return(status: 200, body: "")
+      stub_request(:delete, url)
+        .with(query: {units: 1, process: :resque}, headers: headers_form)
+        .to_return(status: 200, body: "")
+
+      allow(subject).to receive(:total_units).and_return({'web' => 4, 'resque' => 2})
+      expect(subject.remove_units("xpto", 1)).to be_truthy
+    end
+
+    it 'returns false when doesnt remove all process types' do
+      stub_request(:delete, url)
+        .with(query: {units: 2, process: :web}, headers: headers_form)
+        .to_return(status: 200, body: "")
+      stub_request(:delete, url)
+        .with(query: {units: 1, process: :resque}, headers: headers_form)
+        .to_return(status: 500, body: "")
+
+      allow(subject).to receive(:total_units).and_return({'web' => 2, 'resque' => 1})
+      expect(subject.remove_units("xpto")).to be_falsy
     end
   end
 end

@@ -80,8 +80,6 @@ class BlueGreen
 
   private
   def remove_units_per_process_type(app, units_to_remove, process_name)
-    puts "Removing #{units_to_remove} '#{process_name}' units from #{app}"
-
     uri = URI("#{@target}apps/#{app}/units?units=#{units_to_remove}&process=#{process_name}")
     req = Net::HTTP::Delete.new(uri.request_uri, headers.merge({"Content-Type" => "application/x-www-form-urlencoded"}))
     res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
