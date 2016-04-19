@@ -70,11 +70,12 @@ class BlueGreen
   end
 
   def remove_units(app, units_to_keep=0)
-      total_units = total_units(app)
-      results = total_units.map do |process_name, units|
-        remove_units_per_process_type(app, units - units_to_keep, process_name)
-      end
-      results.all?
+    total_units = total_units(app)
+    results = total_units.map do |process_name, units|
+      remove_units_per_process_type(app, units - units_to_keep, process_name)
+    end
+
+    results.all?
   end
 
 
