@@ -194,4 +194,59 @@ describe BlueGreen do
       expect(subject.remove_units("xpto")).to be_falsy
     end
   end
+
+  describe "#add_units" do
+    let(:url) { "#{target}apps/xpto/units"}
+
+    it "returns true when adds web units" do
+      stub_request(:put, url)
+        .with(query: {units: 1, process: :web}, headers: headers)
+        .to_return(status: 200, body: "")
+
+      allow(subject).to receive(:total_units).and_return({'web' => 1}, {'web' => 2})
+      expect(subject.add_units("xpto", {'web' =>  2})).to eql(true)
+    end
+
+    it "returns true when adds web and resque units" do
+      stub_request(:put, url)
+        .with(query: {units: 3, process: :web}, headers: headers)
+        .to_return(status: 200, body: "")
+      stub_request(:put, url)
+        .with(query: {units: 1, process: :resque}, headers: headers)
+        .to_return(status: 200, body: "")
+
+      allow(subject).to receive(:total_units).and_return({'web' => 2, 'resque' => 1}, {'web' => 5, 'resque' => 1}, {'web' => 5, 'resque' => 2})
+      expect(subject.add_units("xpto", {'web' =>  5, 'resque' => 2})).to eql(true)
+    end
+
+    it "returns true when adds only web units" do
+      stub_request(:put, url)
+        .with(query: {units: 3, process: :web}, headers: headers)
+        .to_return(status: 200, body: "")
+
+      allow(subject).to receive(:total_units).and_return({'web' => 2, 'resque' => 1}, {'web' => 5, 'resque' => 1})
+      expect(subject.add_units("xpto", {'web' => 5, 'resque' => 1})).to eql(true)
+    end
+
+    it "returns false when doesnt add units" do
+      stub_request(:put, url)
+        .with(query: {units: 1, process: :web}, headers: headers)
+        .to_return(status: 500, body: "")
+
+      allow(subject).to receive(:total_units).and_return({'web' => 2}, {'web' => 3})
+      expect(subject.add_units("xpto", {'web' => 3})).to be_falsy
+    end
+
+    it "returns false when doesnt add units all process" do
+      stub_request(:put, url)
+        .with(query: {units: 1, process: :web}, headers: headers)
+        .to_return(status: 500, body: "")
+      stub_request(:put, url)
+        .with(query: {units: 1, process: :resque}, headers: headers)
+        .to_return(status: 200, body: "")
+
+      allow(subject).to receive(:total_units).and_return({'web' => 2, 'resque' => 1}, {'web' => 2, 'resque' => 2})
+      expect(subject.add_units("xpto", {'web' => 3, 'resque' => 2})).to be_falsy
+    end
+  end
 end

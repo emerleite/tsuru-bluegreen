@@ -78,8 +78,39 @@ class BlueGreen
     results.all?
   end
 
+  def add_units(app, total_units_after_add)
+    total_units = total_units(app)
+
+    results = total_units_after_add.map do |process_name, units|
+      units_to_add = 0
+
+      if total_units[process_name]
+        units_to_add = units - total_units[process_name]
+      else
+        units_to_add = units
+      end
+
+     add_units_per_process_type(app, units_to_add, units, process_name) if units_to_add > 0
+    end
+
+    results.compact.all?
+  end
 
   private
+
+  def add_units_per_process_type(app, units_to_add, total_units_after_add, process_name)
+    uri = URI("#{@target}apps/#{app}/units?units=#{units_to_add}&process=#{process_name}")
+    req = Net::HTTP::Put.new(uri.request_uri, headers)
+    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+
+    if (res.code.to_i != 200) || (total_units(app)[process_name] != total_units_after_add)
+      puts "Error adding '#{units_to_add}' units to #{process_name} process in #{app}. Aborting..."
+      return false
+    end
+
+    return true
+  end
+
   def remove_units_per_process_type(app, units_to_remove, process_name)
     uri = URI("#{@target}apps/#{app}/units?units=#{units_to_remove}&process=#{process_name}")
     req = Net::HTTP::Delete.new(uri.request_uri, headers.merge({"Content-Type" => "application/x-www-form-urlencoded"}))
