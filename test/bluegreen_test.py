@@ -32,36 +32,20 @@ class TestBlueGreen(unittest.TestCase):
     self.assertIsNone(self.bg.get_cname('xpto'))
 
   @httpretty.activate
-  def test_remove_cname_return_true_when_can_remove(self):
-    httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/cname',
-                           data='{"cname":["cname1", "cname2"]}',
+  def test_swap_cname_return_true_when_can_swap(self):
+    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/swap?app1=foo&app2=bar&cnameOnly=true',
+                           data='',
                            status=200)
 
-    self.assertTrue(self.bg.remove_cname('xpto', self.cnames))
+    self.assertTrue(self.bg.swap_cname('foo', 'bar'))
 
   @httpretty.activate
-  def test_remove_cname_return_false_when_cant_remove(self):
-    httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/cname',
-                           data='{"cname":["cname1", "cname2"]}',
+  def test_swap_cname_return_false_when_cant_swap(self):
+    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/swap?app1=foo&app2=bar&cnameOnly=true',
+                           data='',
                            status=500)
 
-    self.assertFalse(self.bg.remove_cname('xpto', self.cnames))
-
-  @httpretty.activate
-  def test_set_cname_return_true_when_can_set(self):
-    httpretty.register_uri(httpretty.POST, 'http://tsuru.globoi.com/apps/xpto/cname',
-                           data='{"cname":["cname1", "cname2"]}',
-                           status=200)
-
-    self.assertTrue(self.bg.set_cname('xpto', self.cnames))
-
-  @httpretty.activate
-  def test_set_cname_return_false_when_cant_set(self):
-    httpretty.register_uri(httpretty.POST, 'http://tsuru.globoi.com/apps/xpto/cname',
-                           data='{"cname":["cname1", "cname2"]}',
-                           status=500)
-
-    self.assertFalse(self.bg.set_cname('xpto', self.cnames))
+    self.assertFalse(self.bg.swap_cname('foo', 'bar'))
 
   @httpretty.activate
   def test_env_set_return_true_when_can_set(self):

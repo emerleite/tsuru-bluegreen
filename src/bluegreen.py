@@ -38,17 +38,10 @@ class BlueGreen:
       return None
     return data.get("cname")
 
-  def remove_cname(self, app, cname):
+  def swap_cname(self, app1, app2):
     headers = {"Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
-    conn.request("DELETE", "/apps/" + app + '/cname', '{"cname": ' + json.dumps(cname) + '}', headers)
-    response = conn.getresponse()
-    return response.status == 200
-
-  def set_cname(self, app, cname):
-    headers = {"Content-Type" : "application/json", "Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("POST", "/apps/" + app + '/cname', '{"cname": ' + json.dumps(cname) + '}', headers)
+    conn.request("PUT", "/swap?app1=" + app1 + '&app2=' + app2 + '&cnameOnly=true', '', headers)
     response = conn.getresponse()
     return response.status == 200
 
@@ -237,12 +230,7 @@ class BlueGreen:
     if not self.add_units(apps[1], self.total_units(apps[0])):
       sys.exit()
 
-    if not self.remove_cname(apps[0], cname):
-      print "Error removing cname of %s. Aborting..." % apps[0]
-      self.remove_units(apps[1], 1)
-      sys.exit()
-
-    if self.set_cname(apps[1], cname):
+    if self.swap_cname(apps[0], apps[1]):
       self.remove_units(apps[0])
 
       print """
@@ -259,8 +247,7 @@ class BlueGreen:
           """
 
     else:
-      print "Error adding cname of %s. Aborting..." % apps[1]
-      self.set_cname(apps[0], cname)
+      print "Error swaping cname(s). Aborting..." % apps[1]
       self.remove_units(apps[1], 1)
 
 
