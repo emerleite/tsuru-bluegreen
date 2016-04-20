@@ -329,6 +329,20 @@ describe BlueGreen do
     end
   end
 
+  describe '#run_hook' do
+    it 'returns true on successful command' do
+      expect(subject.run_hook('before_pre')).to be_truthy
+    end
+
+    it 'returns false on failing command' do
+      expect(subject.run_hook('after_swap')).to be_falsy
+    end
+
+    it 'returns true on undefined hook' do
+      expect(subject.run_hook('after_pre')).to be_truthy
+    end
+  end
+
   describe "#request" do
     let(:headers_form) { headers.merge({"Content-Type" => "application/x-www-form-urlencoded"})}
     it 'makes a http request' do

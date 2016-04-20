@@ -121,6 +121,17 @@ class BlueGreen
     end
   end
 
+  def run_hook(hook_name, env_vars={})
+    hook_command = @hooks[hook_name]
+
+    if hook_command
+      @logger.info "Running '#{hook_name}' hook ..."
+      return run_command(hook_command, env_vars)
+    end
+
+    return true
+  end
+
   private
 
   def add_units_per_process_type(app, units_to_add, total_units_after_add, process_name)
