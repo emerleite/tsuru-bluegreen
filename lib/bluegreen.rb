@@ -111,6 +111,16 @@ class BlueGreen
     return false
   end
 
+  def run_command(command, env_vars={})
+    dev_null = '/dev/null'
+
+    begin
+      return system(env_vars, command, out: dev_null, err: dev_null)
+    rescue
+      return false
+    end
+  end
+
   private
 
   def add_units_per_process_type(app, units_to_add, total_units_after_add, process_name)

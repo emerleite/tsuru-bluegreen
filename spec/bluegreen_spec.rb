@@ -314,6 +314,21 @@ describe BlueGreen do
     end
   end
 
+  describe '#run_command' do
+    it 'returns true on success' do
+      expect(subject.run_command('echo test')).to be_truthy
+    end
+
+    it 'returns false on error' do
+      expect(subject.run_command('cat undefined_file')).to be_falsy
+    end
+
+    it 'accepts enviroment variable' do
+      expect(subject.run_command('./test/env_test.sh', {'VAR' => '0'})).to be_truthy
+      expect(subject.run_command('./test/env_test.sh', {'VAR' => '1'})).to be_falsy
+    end
+  end
+
   describe "#request" do
     let(:headers_form) { headers.merge({"Content-Type" => "application/x-www-form-urlencoded"})}
     it 'makes a http request' do
