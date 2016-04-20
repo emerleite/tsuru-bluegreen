@@ -286,6 +286,34 @@ describe BlueGreen do
     end
   end
 
+  describe "#run_webhook" do
+    let(:url) { "http://example.com"}
+    let(:payload) { 'key1=value1&key2=value2' }
+    let(:headers_webhook) { {"Content-Type" =>  "application/x-www-form-urlencoded"} }
+
+
+    it "runs webhook when config defined" do
+      stub_request(:post, url)
+        .with(body:  {"key1"=>"value1", "key2"=>"value2", "tag" => "1.0"}, headers: headers.merge(headers_webhook))
+        .to_return(status: 200, body: "")
+
+      expect(subject.run_webhook('1.0')).to be_truthy
+    end
+
+    it "doesnt run webhook when config is not defined" do
+      subject.instance_variable_set("@webhook", {})
+      expect(subject.run_webhook('1.0')).to be_falsy
+    end
+
+    it "doesnt run webhook when error" do
+      stub_request(:post, url)
+        .with(body:  {"key1"=>"value1", "key2"=>"value2", "tag" => "1.0"}, headers: headers.merge(headers_webhook))
+        .to_return(status: 500, body: "")
+
+      expect(subject.run_webhook('1.0')).to be_falsy
+    end
+  end
+
   describe "#request" do
     let(:headers_form) { headers.merge({"Content-Type" => "application/x-www-form-urlencoded"})}
     it 'makes a http request' do

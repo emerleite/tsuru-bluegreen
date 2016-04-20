@@ -11,7 +11,7 @@ class BlueGreen
     @app_name = config["name"]
     @hooks = config["hooks"] || {}
     @newrelic = config["newrelic"] || {}
-    @webhook = config["newrelic"] || {}
+    @webhook = config["webhook"] || {}
 
     @logger = Logger.new(STDOUT)
     @logger.level = Logger::INFO
@@ -91,6 +91,20 @@ class BlueGreen
 
       headers = {"Content-Type" =>  "application/x-www-form-urlencoded", "x-api-key" =>  api_key}
       res = request(:post, "http://api.newrelic.com/deployments.xml", payload: "deployment[application_id]=#{app_id}&deployment[revision]=#{tag}", headers: headers)
+      return res.code.to_i == 200
+    end
+
+    return false
+  end
+
+  def run_webhook(tag)
+    endpoint = @webhook['endpoint']
+    payload_extras = @webhook['payload_extras']
+
+    if endpoint && payload_extras
+      @logger.info "POSTING to WebHook '#{endpoint}' ..."
+      headers = {"Content-Type" =>  "application/x-www-form-urlencoded"}
+      res = request(:post, endpoint, payload: "#{payload_extras}&tag=#{tag}", headers: headers)
       return res.code.to_i == 200
     end
 
