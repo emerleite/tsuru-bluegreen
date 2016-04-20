@@ -132,6 +132,24 @@ class BlueGreen
     return true
   end
 
+  def deploy_pre(app, tag)
+    @logger.info("Pre deploying tag:#{tag} to #{app} ...")
+
+    remove_units(app)
+    env_set(app, 'TAG', tag)
+
+    unless run_hook('before_pre', {'TAG' => tag})
+      @logger.error("Error running 'before' hook. Pre deploy aborted.")
+      return
+    end
+
+    system('git', 'push', '--force', app, "#{tag}:master")
+
+    unless run_hook('after_pre', {'TAG' => tag})
+      @logger.error("Error running 'after' hook. Pre deploy aborted.")
+    end
+  end
+
   private
 
   def add_units_per_process_type(app, units_to_add, total_units_after_add, process_name)
