@@ -53,20 +53,6 @@ class BlueGreen:
     body = "app1={}&app2={}&force=true&cnameOnly=true".format(app1, app2)
     return self.post(url, body)
 
-  def remove_cname(self, app, cname):
-    headers = {"Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("DELETE", "/apps/" + app + '/cname', '{"cname": ' + json.dumps(cname) + '}', headers)
-    response = conn.getresponse()
-    return response.status == 200
-
-  def set_cname(self, app, cname):
-    headers = {"Content-Type" : "application/json", "Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("POST", "/apps/" + app + '/cname', '{"cname": ' + json.dumps(cname) + '}', headers)
-    response = conn.getresponse()
-    return response.status == 200
-
   def env_set(self, app, key, value):
     headers = {"Content-Type" : "application/json", "Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
@@ -252,32 +238,15 @@ class BlueGreen:
     if not self.add_units(apps[1], self.total_units(apps[0])):
       sys.exit()
 
-    if not self.remove_cname(apps[0], cname):
-      print "Error removing cname of %s. Aborting..." % apps[0]
-      self.remove_units(apps[1], 1)
-      sys.exit()
+    if not self.swap(app[0], app[1]):
+      print "Error swaping {} and {}. Aborting...".format(app[0], app[1])
 
-    if self.set_cname(apps[1], cname):
-      self.remove_units(apps[0])
+    print "Apps {} and {} cnames successfullly swapped!".format(app[0], app[1])
 
+    if not self.run_hook('after_swap', {"TAG": tag}):
       print """
-  Application %s is live at %s ...
-      """ % (apps[1], ','.join(cname))
-
-      self.notify_newrelic(tag)
-
-      self.run_webhook(tag)
-
-      if not self.run_hook('after_swap', {"TAG": tag}):
-          print """
   Error running 'before' hook. Pre deploy aborted.
-          """
-
-    else:
-      print "Error adding cname of %s. Aborting..." % apps[1]
-      self.set_cname(apps[0], cname)
-      self.remove_units(apps[1], 1)
-
+      """
 
 class Config:
   @classmethod
