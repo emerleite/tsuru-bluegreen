@@ -223,7 +223,7 @@ class BlueGreen:
   Error running 'after' hook. Pre deploy aborted.
         """
 
-  def deploy_swap(self, apps, cname):
+  def deploy_swap(self, apps):
     print """
   Changing live application to %s ...""" % apps[1]
 
@@ -330,13 +330,11 @@ if __name__ == "__main__":
 
   #reverse if first is not None
   if cnames[0] is not None:
-    cnames.reverse()
     apps.reverse()
 
-  cname = cnames[1]
   pre = apps[1]
 
   if args.action == 'pre':
     bluegreen.deploy_pre(pre, args.tag)
   elif args.action == 'swap':
-    bluegreen.deploy_swap(apps, cname)
+    bluegreen.deploy_swap(apps)
