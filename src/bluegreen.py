@@ -48,6 +48,14 @@ class BlueGreen:
     response = conn.getresponse()
     return response.status == 200
 
+  def get(self, url):
+    headers = {
+      "Authorization": "bearer " + self.token,
+     }
+    conn = httplib.HTTPConnection(self.target)
+    conn.request("GET", url, "", headers)
+    return conn.getresponse()
+
   def swap(self, app1, app2):
     url = "/swap"
     body = "app1={}&app2={}&force=true&cnameOnly=true".format(app1, app2)
@@ -61,20 +69,15 @@ class BlueGreen:
     return response.status == 200
 
   def env_get(self, app, key):
-    headers = {"Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("GET", "/apps/" + app + '/env', '["' + key + '"]', headers)
-    response = conn.getresponse()
+    url = "/apps/{}/env?env={}".format(app, key)
+    response = self.get(url)
     data = json.loads(response.read())
     if data is None or len(data) == 0:
       return None
     return data[0].get("value")
 
   def total_units(self, app):
-    headers = {"Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("GET", "/apps/" + app, "", headers)
-    response = conn.getresponse()
+    response = self.get("/apps/{}".format(app))
     data = json.loads(response.read())
 
     units = {}
