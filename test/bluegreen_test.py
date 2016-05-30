@@ -32,6 +32,14 @@ class TestBlueGreen(unittest.TestCase):
     self.assertIsNone(self.bg.get_cname('xpto'))
 
   @httpretty.activate
+  def test_swap(self):
+    httpretty.register_uri(httpretty.POST, "http://tsuru.globoi.com/swap",
+                           data="app1=app1&app2=app2&force=true&cnameOnly=true",
+                           status=200)
+
+    self.assertTrue(self.bg.swap("app1", "app2"))
+
+  @httpretty.activate
   def test_remove_cname_return_true_when_can_remove(self):
     httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/cname',
                            data='{"cname":["cname1", "cname2"]}',

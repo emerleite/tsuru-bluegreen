@@ -38,6 +38,21 @@ class BlueGreen:
       return None
     return data.get("cname")
 
+  def post(self, url, body):
+    headers = {
+      "Authorization": "bearer " + self.token,
+      "Content-Type": "application/x-www-form-urlencoded",
+     }
+    conn = httplib.HTTPConnection(self.target)
+    conn.request("POST", url, body, headers)
+    response = conn.getresponse()
+    return response.status == 200
+
+  def swap(self, app1, app2):
+    url = "/swap"
+    body = "app1={}&app2={}&force=true&cnameOnly=true".format(app1, app2)
+    return self.post(url, body)
+
   def remove_cname(self, app, cname):
     headers = {"Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
