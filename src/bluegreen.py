@@ -62,11 +62,9 @@ class BlueGreen:
     return self.post(url, body)
 
   def env_set(self, app, key, value):
-    headers = {"Content-Type" : "application/json", "Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("POST", "/apps/" + app + '/env?noRestart=true', '{"' + key + '": "' + value + '"}', headers)
-    response = conn.getresponse()
-    return response.status == 200
+    url = "/apps/{}/env".format(app)
+    body =  "noRestart=true&Envs.0.Name={}&Envs.0.Value={}".format(key, value)
+    return self.post(url, body)
 
   def env_get(self, app, key):
     url = "/apps/{}/env?env={}".format(app, key)
