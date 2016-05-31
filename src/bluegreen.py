@@ -29,10 +29,7 @@ class BlueGreen:
       self.webhook = {}
 
   def get_cname(self, app):
-    headers = {"Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("GET", "/apps/" + app, "", headers)
-    response = conn.getresponse()
+    response = self.get("/apps/{}".format(app))
     data = json.loads(response.read())
     if len(data.get("cname")) == 0:
       return None
@@ -53,7 +50,7 @@ class BlueGreen:
       "Authorization": "bearer " + self.token,
      }
     conn = httplib.HTTPConnection(self.target)
-    conn.request("GET", url, "", headers)
+    conn.request("GET", url, None, headers)
     return conn.getresponse()
 
   def swap(self, app1, app2):
@@ -239,10 +236,10 @@ class BlueGreen:
     if not self.add_units(apps[1], self.total_units(apps[0])):
       sys.exit()
 
-    if not self.swap(app[0], app[1]):
-      print "Error swaping {} and {}. Aborting...".format(app[0], app[1])
+    if not self.swap(apps[0], apps[1]):
+      print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
 
-    print "Apps {} and {} cnames successfullly swapped!".format(app[0], app[1])
+    print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
 
     if not self.run_hook('after_swap', {"TAG": tag}):
       print """
@@ -307,7 +304,7 @@ class Config:
 if __name__ == "__main__":
   #Initialization
   token = os.environ['TSURU_TOKEN']
-  target = urlparse(os.environ['TSURU_TARGET']).hostname
+  target = urlparse(os.environ['TSURU_TARGET']).netloc
 
   #Parameters
   parser = argparse.ArgumentParser(description='Tsuru blue-green deployment (pre and live).',
