@@ -104,7 +104,7 @@ class BlueGreen:
     print """
   Removing %s '%s' units from %s ...""" % (units_to_remove, process_name, app)
 
-    headers = {"Content-Type" : "application/x-www-form-urlencoded", "Authorization" : "bearer " + self.token}
+    headers = {"Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
     conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
