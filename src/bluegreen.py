@@ -105,7 +105,6 @@ class BlueGreen:
     conn = httplib.HTTPConnection(self.target)
     conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
-    response.read()
     if response.status != 200:
       print "Error removing '%s' units from %s. You'll need to remove manually." % (process_name, app)
       return False
@@ -236,7 +235,9 @@ class BlueGreen:
     if not self.add_units(apps[1], self.total_units(apps[0])):
       sys.exit()
 
-    if not self.swap(apps[0], apps[1]):
+    if self.swap(apps[0], apps[1]):
+      self.remove_units(apps[0])
+    else:
       print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
 
     print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
