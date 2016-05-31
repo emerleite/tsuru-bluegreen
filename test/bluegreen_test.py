@@ -14,26 +14,26 @@ class TestBlueGreen(unittest.TestCase):
       'webhook': {'endpoint': 'http://example.com', 'payload_extras': 'key1=value1&key2=value2'}
     }
 
-    self.bg = BlueGreen('token', 'tsuru.globoi.com', config)
+    self.bg = BlueGreen('token', 'tsuruhost.com', config)
     self.cnames = [u'cname1', u'cname2']
 
   @httpretty.activate
   def test_get_cname_returns_a_list_when_present(self):
-    httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto',
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto',
                            body='{"cname":["cname1", "cname2"]}')
 
     self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
 
   @httpretty.activate
   def test_get_cname_returns_none_when_empty(self):
-    httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto',
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto',
                            body='{"cname":[]}')
 
     self.assertIsNone(self.bg.get_cname('xpto'))
 
   @httpretty.activate
   def test_swap(self):
-    httpretty.register_uri(httpretty.POST, "http://tsuru.globoi.com/swap",
+    httpretty.register_uri(httpretty.POST, "http://tsuruhost.com/swap",
                            data="app1=app1&app2=app2&force=true&cnameOnly=true",
                            status=200)
 
@@ -41,7 +41,7 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_env_set_return_true_when_can_set(self):
-    httpretty.register_uri(httpretty.POST, 'http://tsuru.globoi.com/apps/xpto/env?noRestart=true',
+    httpretty.register_uri(httpretty.POST, 'http://tsuruhost.com/apps/xpto/env?noRestart=true',
                            data='{"TAG":"tag_value"}',
                            status=200,
                            match_querystring=True)
@@ -50,7 +50,7 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_env_set_return_false_when_cant_set(self):
-    httpretty.register_uri(httpretty.POST, 'http://tsuru.globoi.com/apps/xpto/env?noRestart=true',
+    httpretty.register_uri(httpretty.POST, 'http://tsuruhost.com/apps/xpto/env?noRestart=true',
                            data='{"TAG":"tag_value"}',
                            status=500,
                            match_querystring=True)
@@ -59,7 +59,7 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_env_get_returns_a_value_when_present(self):
-    httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto/env',
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto/env',
                            data='["TAG"]',
                            body='[{"name":"TAG","public":true,"value":"1.0"}]')
 
@@ -67,7 +67,7 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_env_get_returns_none_when_null(self):
-    httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto/env',
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto/env',
                            data='["TAG"]',
                            body='null')
 
@@ -75,7 +75,7 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_env_get_returns_none_when_null(self):
-    httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto/env',
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto/env',
                            data='["TAG"]',
                            body='[]')
 
@@ -83,7 +83,7 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_total_units_empty_without_units(self):
-    httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto',
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto',
                            body='{"units":[]}',
                            status=500)
 
@@ -91,7 +91,7 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_total_units_grouped_per_process_name(self):
-    httpretty.register_uri(httpretty.GET, 'http://tsuru.globoi.com/apps/xpto',
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto',
                            body='{"units":[{"ProcessName": "web"}, {"ProcessName": "resque"}, {"ProcessName": "web"}]}',
                            status=500)
 
@@ -101,7 +101,7 @@ class TestBlueGreen(unittest.TestCase):
   def test_remove_units_should_return_true_when_removes_web_units(self):
     self.bg.total_units = Mock(side_effect=self.mock_total_units([{'web': 2}, {'web': 0}]))
 
-    httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            status=200)
 
@@ -112,7 +112,7 @@ class TestBlueGreen(unittest.TestCase):
   def test_remove_units_should_return_true_when_removes_web_and_resque_units(self):
     self.bg.total_units = Mock(side_effect=self.mock_total_units([{'web': 4, 'resque': 2}, {'web': 0, 'resque': 2}, {'web': 0, 'resque': 0}]))
 
-    httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            status=200)
 
@@ -127,7 +127,7 @@ class TestBlueGreen(unittest.TestCase):
   def test_remove_units_should_allow_keep_units(self):
     self.bg.total_units = Mock(side_effect=self.mock_total_units([{'web': 4, 'resque': 2}, {'web': 1, 'resque': 2}, {'web': 1, 'resque': 1}]))
 
-    httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            status=200)
 
@@ -142,7 +142,7 @@ class TestBlueGreen(unittest.TestCase):
   def test_remove_units_should_return_false_when_doesnt_remove(self):
     self.bg.total_units = MagicMock(return_value={'web': 2})
 
-    httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            status=500)
 
@@ -152,7 +152,7 @@ class TestBlueGreen(unittest.TestCase):
   def test_remove_units_should_return_false_when_doesnt_remove_all_process_types(self):
     self.bg.total_units = MagicMock(return_value={'web': 2, 'resque': 1})
 
-    httpretty.register_uri(httpretty.DELETE, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            responses=[
                                httpretty.Response(body='', status=500),
@@ -168,7 +168,7 @@ class TestBlueGreen(unittest.TestCase):
   def test_add_units_should_return_true_when_adds_web_units(self):
     self.bg.total_units = MagicMock(side_effect=self.mock_total_units([{'web': 1}, {'web': 2}]))
 
-    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.PUT, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            status=200)
 
@@ -180,7 +180,7 @@ class TestBlueGreen(unittest.TestCase):
   def test_add_units_should_return_true_when_adds_web_and_resque_units(self):
     self.bg.total_units = MagicMock(side_effect=self.mock_total_units([{'web': 2, 'resque': 1}, {'web': 5, 'resque': 1}, {'web': 5, 'resque': 2}]))
 
-    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.PUT, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            status=200)
 
@@ -195,7 +195,7 @@ class TestBlueGreen(unittest.TestCase):
   def test_add_units_should_return_true_when_adds_only_web_units(self):
     self.bg.total_units = MagicMock(side_effect=self.mock_total_units([{'web': 2, 'resque': 1}, {'web': 5, 'resque': 1}]))
 
-    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.PUT, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            status=200)
 
@@ -209,7 +209,7 @@ class TestBlueGreen(unittest.TestCase):
   def test_add_units_should_return_false_when_doesnt_add(self):
     self.bg.total_units = MagicMock(return_value={'web': 2})
 
-    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.PUT, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            status=500)
 
@@ -219,7 +219,7 @@ class TestBlueGreen(unittest.TestCase):
   def test_remove_units_should_return_false_when_doesnt_add_all_process_types(self):
     self.bg.total_units = MagicMock(return_value={'web': 2, 'resque': 1})
 
-    httpretty.register_uri(httpretty.PUT, 'http://tsuru.globoi.com/apps/xpto/units',
+    httpretty.register_uri(httpretty.PUT, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            responses=[
                                httpretty.Response(body='', status=500),
