@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0 / 2016-06-03
+
+   - Compatibility with Tsuru API 1.0
+   - Using Tsuru Swap feature instead of ad-hoc swap implementation
+
 ## 0.10.0 / 2016-02-25
 
   - Avoid application restart when env-set. Refs https://github.com/tsuru/tsuru/issues/1271. (Emerson Macedo)
