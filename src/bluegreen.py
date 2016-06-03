@@ -29,51 +29,50 @@ class BlueGreen:
       self.webhook = {}
 
   def get_cname(self, app):
-    headers = {"Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("GET", "/apps/" + app, "", headers)
-    response = conn.getresponse()
+    response = self.get("/apps/{}".format(app))
     data = json.loads(response.read())
     if len(data.get("cname")) == 0:
       return None
     return data.get("cname")
 
-  def remove_cname(self, app, cname):
-    headers = {"Authorization" : "bearer " + self.token}
+  def post(self, url, body):
+    headers = {
+      "Authorization": "bearer " + self.token,
+      "Content-Type": "application/x-www-form-urlencoded",
+     }
     conn = httplib.HTTPConnection(self.target)
-    conn.request("DELETE", "/apps/" + app + '/cname', '{"cname": ' + json.dumps(cname) + '}', headers)
+    conn.request("POST", url, body, headers)
     response = conn.getresponse()
     return response.status == 200
 
-  def set_cname(self, app, cname):
-    headers = {"Content-Type" : "application/json", "Authorization" : "bearer " + self.token}
+  def get(self, url):
+    headers = {
+      "Authorization": "bearer " + self.token,
+     }
     conn = httplib.HTTPConnection(self.target)
-    conn.request("POST", "/apps/" + app + '/cname', '{"cname": ' + json.dumps(cname) + '}', headers)
-    response = conn.getresponse()
-    return response.status == 200
+    conn.request("GET", url, None, headers)
+    return conn.getresponse()
+
+  def swap(self, app1, app2):
+    url = "/swap"
+    body = "app1={}&app2={}&force=true&cnameOnly=true".format(app1, app2)
+    return self.post(url, body)
 
   def env_set(self, app, key, value):
-    headers = {"Content-Type" : "application/json", "Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("POST", "/apps/" + app + '/env?noRestart=true', '{"' + key + '": "' + value + '"}', headers)
-    response = conn.getresponse()
-    return response.status == 200
+    url = "/apps/{}/env".format(app)
+    body =  "noRestart=true&Envs.0.Name={}&Envs.0.Value={}".format(key, value)
+    return self.post(url, body)
 
   def env_get(self, app, key):
-    headers = {"Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("GET", "/apps/" + app + '/env', '["' + key + '"]', headers)
-    response = conn.getresponse()
+    url = "/apps/{}/env?env={}".format(app, key)
+    response = self.get(url)
     data = json.loads(response.read())
     if data is None or len(data) == 0:
       return None
     return data[0].get("value")
 
   def total_units(self, app):
-    headers = {"Authorization" : "bearer " + self.token}
-    conn = httplib.HTTPConnection(self.target)
-    conn.request("GET", "/apps/" + app, "", headers)
-    response = conn.getresponse()
+    response = self.get("/apps/{}".format(app))
     data = json.loads(response.read())
 
     units = {}
@@ -102,11 +101,10 @@ class BlueGreen:
     print """
   Removing %s '%s' units from %s ...""" % (units_to_remove, process_name, app)
 
-    headers = {"Content-Type" : "application/x-www-form-urlencoded", "Authorization" : "bearer " + self.token}
+    headers = {"Authorization" : "bearer " + self.token}
     conn = httplib.HTTPConnection(self.target)
     conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
-    response.read()
     if response.status != 200:
       print "Error removing '%s' units from %s. You'll need to remove manually." % (process_name, app)
       return False
@@ -222,7 +220,7 @@ class BlueGreen:
   Error running 'after' hook. Pre deploy aborted.
         """
 
-  def deploy_swap(self, apps, cname):
+  def deploy_swap(self, apps):
     print """
   Changing live application to %s ...""" % apps[1]
 
@@ -237,32 +235,17 @@ class BlueGreen:
     if not self.add_units(apps[1], self.total_units(apps[0])):
       sys.exit()
 
-    if not self.remove_cname(apps[0], cname):
-      print "Error removing cname of %s. Aborting..." % apps[0]
-      self.remove_units(apps[1], 1)
-      sys.exit()
-
-    if self.set_cname(apps[1], cname):
+    if self.swap(apps[0], apps[1]):
       self.remove_units(apps[0])
-
-      print """
-  Application %s is live at %s ...
-      """ % (apps[1], ','.join(cname))
-
-      self.notify_newrelic(tag)
-
-      self.run_webhook(tag)
-
-      if not self.run_hook('after_swap', {"TAG": tag}):
-          print """
-  Error running 'before' hook. Pre deploy aborted.
-          """
-
     else:
-      print "Error adding cname of %s. Aborting..." % apps[1]
-      self.set_cname(apps[0], cname)
-      self.remove_units(apps[1], 1)
+      print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
 
+    print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
+
+    if not self.run_hook('after_swap', {"TAG": tag}):
+      print """
+  Error running 'before' hook. Pre deploy aborted.
+      """
 
 class Config:
   @classmethod
@@ -322,7 +305,7 @@ class Config:
 if __name__ == "__main__":
   #Initialization
   token = os.environ['TSURU_TOKEN']
-  target = urlparse(os.environ['TSURU_TARGET']).hostname
+  target = urlparse(os.environ['TSURU_TARGET']).netloc
 
   #Parameters
   parser = argparse.ArgumentParser(description='Tsuru blue-green deployment (pre and live).',
@@ -346,13 +329,11 @@ if __name__ == "__main__":
 
   #reverse if first is not None
   if cnames[0] is not None:
-    cnames.reverse()
     apps.reverse()
 
-  cname = cnames[1]
   pre = apps[1]
 
   if args.action == 'pre':
     bluegreen.deploy_pre(pre, args.tag)
   elif args.action == 'swap':
-    bluegreen.deploy_swap(apps, cname)
+    bluegreen.deploy_swap(apps)
