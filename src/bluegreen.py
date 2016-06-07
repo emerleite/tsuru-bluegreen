@@ -237,15 +237,20 @@ class BlueGreen:
 
     if self.swap(apps[0], apps[1]):
       self.remove_units(apps[0])
+
+      print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
+
+      self.notify_newrelic(tag)
+
+      self.run_webhook(tag)
+
+      if not self.run_hook('after_swap', {"TAG": tag}):
+        print """
+  Error running 'before' hook. Pre deploy aborted.
+          """
     else:
       print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
-
-    print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
-
-    if not self.run_hook('after_swap', {"TAG": tag}):
-      print """
-  Error running 'before' hook. Pre deploy aborted.
-      """
+      self.remove_units(apps[1])
 
 class Config:
   @classmethod
