@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2 / 2016-06-08
+
+   - Swapping applications using cname-remove plus cname-add until Tsuru fix it's swap problem.
+
 ## 1.0.1 / 2016-06-07
 
    - Fixed missing hooks and ensure removes units when swap fails
