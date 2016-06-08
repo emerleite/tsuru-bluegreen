@@ -28,6 +28,23 @@ class BlueGreen:
     except KeyError:
       self.webhook = {}
 
+  def remove_cname(self, app, cname):
+    query = ""
+    for val in cname:
+      query += "cname={}&".format(val)
+    query = query[:-1]
+
+    response = self.delete("/apps/{}/cname?{}".format(app, query))
+    return response.status == 200
+  
+  def set_cname(self, app, cname):
+    url = "/apps/{}/cname".format(app)
+    body = ""
+    for val in cname:
+      body += "cname={}&".format(val)
+    body = body[:-1]
+    return self.post(url, body)
+
   def get_cname(self, app):
     response = self.get("/apps/{}".format(app))
     data = json.loads(response.read())
@@ -51,6 +68,14 @@ class BlueGreen:
      }
     conn = httplib.HTTPConnection(self.target)
     conn.request("GET", url, None, headers)
+    return conn.getresponse()
+
+  def delete(self, url):
+    headers = {
+      "Authorization": "bearer " + self.token,
+     }
+    conn = httplib.HTTPConnection(self.target)
+    conn.request("DELETE", url, None, headers)
     return conn.getresponse()
 
   def swap(self, app1, app2):
@@ -220,7 +245,7 @@ class BlueGreen:
   Error running 'after' hook. Pre deploy aborted.
         """
 
-  def deploy_swap(self, apps):
+  def deploy_swap(self, apps, cname):
     print """
   Changing live application to %s ...""" % apps[1]
 
@@ -235,7 +260,12 @@ class BlueGreen:
     if not self.add_units(apps[1], self.total_units(apps[0])):
       sys.exit()
 
-    if self.swap(apps[0], apps[1]):
+    if not self.remove_cname(apps[0], cname):
+      print "Error removing cname of %s. Aborting..." % apps[0]
+      self.remove_units(apps[1], 1)
+      sys.exit()
+
+    if self.set_cname(apps[1], cname):
       self.remove_units(apps[0])
 
       print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
@@ -250,7 +280,8 @@ class BlueGreen:
           """
     else:
       print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
-      self.remove_units(apps[1])
+      self.set_cname(apps[0], cname)
+      self.remove_units(apps[1], 1)
 
 class Config:
   @classmethod
@@ -316,7 +347,7 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Tsuru blue-green deployment (pre and live).',
                                    usage='tsuru bluegreen action [options]')
 
-  parser.add_argument('action', metavar='action', help='pre or swap', choices=['pre', 'swap'])
+  parser.add_argument('action', metavar='action', help='pre or swap', choices=['pre', 'swap', 'cname'])
   parser.add_argument('-t', '--tag', metavar='TAG', help='Tag to be deployed (default: master)', nargs='?', default="master")
 
   args = parser.parse_args()
@@ -334,11 +365,15 @@ if __name__ == "__main__":
 
   #reverse if first is not None
   if cnames[0] is not None:
+    cnames.reverse()
     apps.reverse()
 
+  cname = cnames[1]
   pre = apps[1]
 
   if args.action == 'pre':
     bluegreen.deploy_pre(pre, args.tag)
+  elif args.action == 'cname':
+    print bluegreen.get_cname(apps[0])
   elif args.action == 'swap':
-    bluegreen.deploy_swap(apps)
+    bluegreen.deploy_swap(apps, cname)
