@@ -9,7 +9,7 @@ Python 2.7
 ## Installation
 
 ```
-tsuru plugin-install bluegreen https://raw.githubusercontent.com/emerleite/tsuru-bluegreen/1.0.2/src/bluegreen.py
+tsuru plugin-install bluegreen https://raw.githubusercontent.com/emerleite/tsuru-bluegreen/1.1.0/src/bluegreen.py
 ```
 
 ## Deployment methods

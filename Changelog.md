@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0 / 2016-08-05
+
+   - Adds support to deploys using `tsuru app-deploy` command (Luiz Bezerra)
+
 ## 1.0.2 / 2016-06-08
 
    - Swapping applications using cname-remove plus cname-add until Tsuru fix it's swap problem.
