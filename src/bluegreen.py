@@ -15,6 +15,8 @@ class BlueGreen:
     self.token = token
     self.target = target
     self.app_name = config['name']
+    self.deploy_dir = config['deploy_dir']
+
     try:
       self.hooks = config['hooks']
     except KeyError:
@@ -221,7 +223,7 @@ class BlueGreen:
 
     return True
 
-  def deploy_pre(self, app, tag):
+  def deploy_pre(self, app, tag, app_deploy):
     print """
   Pre deploying tag:%s to %s ...
     """ % (tag, app)
@@ -236,7 +238,12 @@ class BlueGreen:
         """
         return
 
-    process = subprocess.Popen(['git', 'push', '--force', app, "%s:master" % tag], stdout=subprocess.PIPE)
+    deploy_arguments = ['git', 'push', '--force', app, "%s:master" % tag]
+
+    if app_deploy:
+      deploy_arguments = ['tsuru', 'app-deploy', self.deploy_dir, '-a', app]
+
+    process = subprocess.Popen(deploy_arguments, stdout=subprocess.PIPE)
     for line in iter(process.stdout.readline, ''):
       sys.stdout.write(line)
 
@@ -291,6 +298,11 @@ class Config:
 
     app_name = config.get('Application', 'name')
 
+    try:
+      deploy_dir = config.get('Application', 'deploy_dir')
+    except ConfigParser.NoOptionError:
+      deploy_dir = '.'
+
     hooks = {
       'before_pre': None,
       'after_pre': None,
@@ -336,7 +348,7 @@ class Config:
       except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         pass
 
-    return {'name' : app_name, 'hooks' : hooks, 'newrelic' : newrelic, 'webhook' : webhook}
+    return {'name' : app_name, 'deploy_dir' : deploy_dir , 'hooks' : hooks, 'newrelic' : newrelic, 'webhook' : webhook}
 
 if __name__ == "__main__":
   #Initialization
@@ -349,6 +361,7 @@ if __name__ == "__main__":
 
   parser.add_argument('action', metavar='action', help='pre or swap', choices=['pre', 'swap', 'cname'])
   parser.add_argument('-t', '--tag', metavar='TAG', help='Tag to be deployed (default: master)', nargs='?', default="master")
+  parser.add_argument('--app-deploy', dest='app_deploy', help='Defines deploy method to app deploy', action='store_true')
 
   args = parser.parse_args()
 
@@ -372,7 +385,7 @@ if __name__ == "__main__":
   pre = apps[1]
 
   if args.action == 'pre':
-    bluegreen.deploy_pre(pre, args.tag)
+    bluegreen.deploy_pre(pre, args.tag, args.app_deploy)
   elif args.action == 'cname':
     print bluegreen.get_cname(apps[0])
   elif args.action == 'swap':

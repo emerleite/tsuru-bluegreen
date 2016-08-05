@@ -9,6 +9,7 @@ class TestBlueGreen(unittest.TestCase):
   def setUp(self):
     config = {
       'name': 'test-app',
+      'deploy_dir': '.',
       'hooks': {'before_pre' : 'echo test', 'after_swap' : 'undefined_command'},
       'newrelic': {'api_key' : 'some-api-key', 'app_id' : '123'},
       'webhook': {'endpoint': 'http://example.com', 'payload_extras': 'key1=value1&key2=value2'}
