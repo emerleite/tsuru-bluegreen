@@ -12,6 +12,10 @@ Python 2.7
 tsuru plugin-install bluegreen https://raw.githubusercontent.com/emerleite/tsuru-bluegreen/1.0.2/src/bluegreen.py
 ```
 
+## Deployment methods
+
+By default, the plugin deploys using `git push`. But if you add `--app-deploy` flag, it uses `tsuru app-deploy` command instead. The deploy directory can be configured with the `deploy_dir` key, inside the `Application` section of the configuration file.
+
 ## Configuration
 
 Tsuru bluegreen uses convention over configuration. It assumes your application backend is named using blue and green sufixes, as explained bellow:
@@ -21,6 +25,7 @@ Create a **tsuru-bluegreen.ini** in your application root with the following con
 ```
 [Application]
 name: <your_app>
+deploy_dir: <./build>
 
 [NewRelic]
 api_key: <newrelic_api_key>
@@ -40,6 +45,8 @@ after_swap: <command to run after a successful 'swap' action>
 ### 'Application' section
 
 Based on the `name` configuration value, you must have to have two tsuru applications and git remotes named: your_app**-blue** and your_app**-green**.
+
+The `deploy_dir` configuration value is used with the `--app-deploy` flag. The default value is `.`.
 
 ### 'NewRelic' section
 
@@ -108,6 +115,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -t [TAG], --tag [TAG] Tag to be deployed (default: master)
+  --app-deploy          Defines deploy method to app deploy
 ```
 
 ## Tests
