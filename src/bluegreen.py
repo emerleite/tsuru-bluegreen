@@ -351,10 +351,6 @@ class Config:
     return {'name' : app_name, 'deploy_dir' : deploy_dir , 'hooks' : hooks, 'newrelic' : newrelic, 'webhook' : webhook}
 
 if __name__ == "__main__":
-  #Initialization
-  token = os.environ['TSURU_TOKEN']
-  target = urlparse(os.environ['TSURU_TARGET']).netloc
-
   #Parameters
   parser = argparse.ArgumentParser(description='Tsuru blue-green deployment (pre and live).',
                                    usage='tsuru bluegreen action [options]')
@@ -364,6 +360,10 @@ if __name__ == "__main__":
   parser.add_argument('--app-deploy', dest='app_deploy', help='Defines deploy method to app deploy', action='store_true')
 
   args = parser.parse_args()
+
+  #Initialization
+  token = os.environ['TSURU_TOKEN']
+  target = urlparse(os.environ['TSURU_TARGET']).netloc
 
   config = Config.load('tsuru-bluegreen.ini')
 
