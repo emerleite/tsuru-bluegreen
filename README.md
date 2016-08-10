@@ -33,7 +33,7 @@ app_id: <newrelic_app_id>
 
 [Grafana]
 endpoint: <logstash_endpoint>
-index: <logstash-index>
+index: <logstash_index>
 
 [WebHook]
 endpoint: http://example.com
