@@ -26,6 +26,10 @@ class BlueGreen:
     except KeyError:
       self.newrelic = {}
     try:
+      self.grafana = config['grafana']
+    except KeyError:
+      self.grafana = {}
+    try:
       self.webhook = config['webhook']
     except KeyError:
       self.webhook = {}
@@ -38,7 +42,7 @@ class BlueGreen:
 
     response = self.delete("/apps/{}/cname?{}".format(app, query))
     return response.status == 200
-  
+
   def set_cname(self, app, cname):
     url = "/apps/{}/cname".format(app)
     body = ""
@@ -188,6 +192,30 @@ class BlueGreen:
       return response.status == 200
     return False
 
+  def notify_grafana(self, app, tag):
+    endpoint = self.grafana.get('endpoint')
+    index = self.grafana.get('index')
+
+    if endpoint and index:
+      print """
+    Notifying deploy to Grafana ...
+      """
+      endpoint_host = urlparse(endpoint).hostname
+      endpoint_path = urlparse(endpoint).path
+      headers = {"Content-Type" : "application/json"}
+      payload = {
+        "title": "Deploy",
+        "client": index,
+        "annotation_type": "deploy",
+        "description": app,
+        "label": tag
+      }
+
+      conn = httplib.HTTPConnection(endpoint_host)
+      conn.request("POST", (endpoint_path or '/'), json.dumps(payload), headers)
+      response = conn.getresponse()
+      return response.status == 200
+
   def run_webhook(self, tag):
     endpoint = self.webhook.get('endpoint')
     payload_extras = self.webhook.get('payload_extras')
@@ -279,6 +307,8 @@ class BlueGreen:
 
       self.notify_newrelic(tag)
 
+      self.notify_grafana(apps[1], tag)
+
       self.run_webhook(tag)
 
       if not self.run_hook('after_swap', {"TAG": tag}):
@@ -333,6 +363,21 @@ class Config:
       except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         pass
 
+    #Grafana
+    grafana = {
+      'endpoint': None,
+      'index': None
+    }
+
+    for key in grafana:
+      try:
+        grafana_value = config.get('Grafana', key)
+        if grafana_value:
+          grafana[key] = grafana_value
+
+      except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        pass
+
     #WebHook
     webhook = {
       'endpoint': None,
@@ -348,7 +393,7 @@ class Config:
       except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         pass
 
-    return {'name' : app_name, 'deploy_dir' : deploy_dir , 'hooks' : hooks, 'newrelic' : newrelic, 'webhook' : webhook}
+    return {'name' : app_name, 'deploy_dir' : deploy_dir , 'hooks' : hooks, 'newrelic' : newrelic, 'grafana' : grafana, 'webhook' : webhook}
 
 if __name__ == "__main__":
   #Parameters

@@ -12,6 +12,7 @@ class TestBlueGreen(unittest.TestCase):
       'deploy_dir': '.',
       'hooks': {'before_pre' : 'echo test', 'after_swap' : 'undefined_command'},
       'newrelic': {'api_key' : 'some-api-key', 'app_id' : '123'},
+      'grafana': {'endpoint' : 'http://tcp.logstash.example.com', 'index' : 'test-index'},
       'webhook': {'endpoint': 'http://example.com', 'payload_extras': 'key1=value1&key2=value2'}
     }
 
@@ -61,7 +62,7 @@ class TestBlueGreen(unittest.TestCase):
       httpretty.register_uri(httpretty.POST, 'http://tsuruhost.com/apps/xpto/cname',
                              data='cname=cname1&cname=cname2',
                              status=500)
-          
+
       self.assertFalse(self.bg.set_cname('xpto', self.cnames))
 
   @httpretty.activate
@@ -293,6 +294,26 @@ class TestBlueGreen(unittest.TestCase):
                            data='deployment[application_id]=some-api-key&deployment[revision]=1.0',
                            status=500)
     self.assertFalse(self.bg.notify_newrelic('1.0'))
+
+  @httpretty.activate
+  def test_notify_grafana_when_config_defined(self):
+    httpretty.register_uri(httpretty.POST, 'http://tcp.logstash.example.com',
+                           data='teste',
+                           content_type='application/json',
+                           status=200)
+
+    self.assertTrue(self.bg.notify_grafana('test-blue','1.0'))
+
+  def test_dont_notify_grafana_when_config_undefined(self):
+    self.bg.grafana = {}
+    self.assertFalse(self.bg.notify_grafana('test-blue','1.0'))
+
+  @httpretty.activate
+  def test_dont_notify_grafana_when_error(self):
+    httpretty.register_uri(httpretty.POST, 'http://tcp.logstash.example.com',
+                           data='test',
+                           status=500)
+    self.assertFalse(self.bg.notify_grafana('test-blue','1.0'))
 
   @httpretty.activate
   def test_run_webhook_when_config_defined(self):

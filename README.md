@@ -31,6 +31,10 @@ deploy_dir: <./build>
 api_key: <newrelic_api_key>
 app_id: <newrelic_app_id>
 
+[Grafana]
+endpoint: <logstash_endpoint>
+index: <logstash-index>
+
 [WebHook]
 endpoint: http://example.com
 payload_extras: key1=value1&key2=value2
@@ -51,6 +55,10 @@ The `deploy_dir` configuration value is used with the `--app-deploy` flag. The d
 ### 'NewRelic' section
 
 Notify New Relic about your deployment after swap. See [NewRelic docs](https://docs.newrelic.com/docs/apm/new-relic-apm/maintenance/deployment-notifications).
+
+### 'Grafana' section
+
+Notify Grafana about your deployment after swap. See [Grafana docs](http://docs.grafana.org/reference/annotations/).
 
 ### 'WebHook' section
 

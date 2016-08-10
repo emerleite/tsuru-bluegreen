@@ -23,6 +23,10 @@ class TestConfig(unittest.TestCase):
     self.assertEqual('some-api-key', self.config['newrelic']['api_key'])
     self.assertEqual('123', self.config['newrelic']['app_id'])
 
+  def test_load_grafana_config(self):
+    self.assertEqual('http://tcp.logstash.example.com', self.config['grafana']['endpoint'])
+    self.assertEqual('test-index', self.config['grafana']['index'])
+
   def test_load_webhook_config(self):
     self.assertEqual('http://example.com', self.config['webhook']['endpoint'])
     self.assertEqual('key1=value1&key2=value2', self.config['webhook']['payload_extras'])
