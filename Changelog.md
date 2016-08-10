@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0 / 2016-08-10
+
+   - Adds support to notify deployment to Grafana (Luiz Bezerra)
+
 ## 1.1.0 / 2016-08-05
 
    - Adds support to deploys using `tsuru app-deploy` command (Luiz Bezerra)
