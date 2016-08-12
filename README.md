@@ -14,7 +14,7 @@ tsuru plugin-install bluegreen https://raw.githubusercontent.com/emerleite/tsuru
 
 ## Deployment methods
 
-By default, the plugin deploys using `git push`. But if you add `--app-deploy` flag, it uses `tsuru app-deploy` command instead. The deploy directory can be configured with the `deploy_dir` key, inside the `Application` section of the configuration file.
+By default, the plugin deploys using `git push`. But if you define a `deploy_dir` key, inside the `Application` section of the configuration file, it uses `tsuru app-deploy` command instead.
 
 ## Configuration
 

@@ -30,3 +30,6 @@ class TestConfig(unittest.TestCase):
   def test_load_webhook_config(self):
     self.assertEqual('http://example.com', self.config['webhook']['endpoint'])
     self.assertEqual('key1=value1&key2=value2', self.config['webhook']['payload_extras'])
+
+  def test_load_app_deploy_config(self):
+    self.assertEqual("'.'", self.config['deploy_dir'])
