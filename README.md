@@ -9,7 +9,7 @@ Python 2.7
 ## Installation
 
 ```
-tsuru plugin-install bluegreen https://raw.githubusercontent.com/emerleite/tsuru-bluegreen/1.2.0/src/bluegreen.py
+tsuru plugin-install bluegreen https://raw.githubusercontent.com/emerleite/tsuru-bluegreen/1.2.1/src/bluegreen.py
 ```
 
 ## Deployment methods
@@ -123,7 +123,6 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -t [TAG], --tag [TAG] Tag to be deployed (default: master)
-  --app-deploy          Defines deploy method to app deploy
 ```
 
 ## Tests
