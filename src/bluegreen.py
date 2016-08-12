@@ -233,10 +233,8 @@ class BlueGreen:
     return False
 
   def run_command(self, command, env_vars=None):
-    DEVNULL = open(os.devnull, 'wb')
-
     try:
-      return_value = subprocess.call(command.split(' '), stdout=DEVNULL, stderr=DEVNULL, env=env_vars)
+      return_value = subprocess.call(command.split(' '), env=env_vars)
       return return_value == 0
     except:
       return False
@@ -331,7 +329,7 @@ class Config:
     try:
       deploy_dir = config.get('Application', 'deploy_dir')
     except ConfigParser.NoOptionError:
-      deploy_dir = '.'
+      deploy_dir = None
 
     hooks = {
       'before_pre': None,
@@ -402,7 +400,6 @@ if __name__ == "__main__":
 
   parser.add_argument('action', metavar='action', help='pre or swap', choices=['pre', 'swap', 'cname'])
   parser.add_argument('-t', '--tag', metavar='TAG', help='Tag to be deployed (default: master)', nargs='?', default="master")
-  parser.add_argument('--app-deploy', dest='app_deploy', help='Defines deploy method to app deploy', action='store_true')
 
   args = parser.parse_args()
 
@@ -429,8 +426,10 @@ if __name__ == "__main__":
   cname = cnames[1]
   pre = apps[1]
 
+  app_deploy = config['deploy_dir'] != None
+
   if args.action == 'pre':
-    bluegreen.deploy_pre(pre, args.tag, args.app_deploy)
+    bluegreen.deploy_pre(pre, args.tag, app_deploy)
   elif args.action == 'cname':
     print bluegreen.get_cname(apps[0])
   elif args.action == 'swap':
