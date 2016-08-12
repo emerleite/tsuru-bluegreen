@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 / 2016-08-12
+
+   - `app-deploy` is now defined when `deploy_dir` is defined on tsuru-bluegreen.ini
+
 ## 1.2.0 / 2016-08-10
 
    - Adds support to notify deployment to Grafana (Luiz Bezerra)
