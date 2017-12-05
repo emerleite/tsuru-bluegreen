@@ -267,7 +267,7 @@ class BlueGreen:
     deploy_arguments = ['git', 'push', '--force', app, "%s:master" % tag]
 
     if app_deploy:
-      deploy_arguments = ['tsuru', 'app-deploy', self.deploy_dir, '-a', app]
+      deploy_arguments = ['tsuru', 'app-deploy', '-a', app] + self.deploy_dir.split()
 
     process = subprocess.Popen(deploy_arguments, stdout=subprocess.PIPE)
     for line in iter(process.stdout.readline, ''):
