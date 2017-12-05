@@ -9,7 +9,7 @@ Python 2.7
 ## Installation
 
 ```
-tsuru plugin-install bluegreen https://raw.githubusercontent.com/emerleite/tsuru-bluegreen/1.2.1/src/bluegreen.py
+tsuru plugin-install bluegreen https://raw.githubusercontent.com/emerleite/tsuru-bluegreen/1.3.0/src/bluegreen.py
 ```
 
 ## Deployment methods
@@ -25,7 +25,7 @@ Create a **tsuru-bluegreen.ini** in your application root with the following con
 ```
 [Application]
 name: <your_app>
-deploy_dir: <./build>
+deploy_dir: <./build> <./build2>
 
 [NewRelic]
 api_key: <newrelic_api_key>
