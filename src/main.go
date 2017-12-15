@@ -1,10 +1,11 @@
 package main
 
 import (
-	"os"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
-	"encoding/json"
+	"os"
 )
 
 type Response struct {
@@ -30,5 +31,28 @@ func get_cname(app string) string {
 }
 
 func main() {
-	fmt.Println(get_cname("login-green"))
+	cnameCommand := flag.NewFlagSet("cname", flag.ExitOnError)
+
+//	fmt.Println(flag.Args())
+
+	// Verify that a subcommand has been provided
+	// os.Arg[0] is the main command
+	// os.Arg[1] will be the subcommand
+	if len(os.Args) < 2 {
+		fmt.Println("list or count subcommand is required")
+		os.Exit(1)
+	}
+
+	switch os.Args[1] {
+	case "cname":
+		cnameCommand.Parse(os.Args[2:])
+
+	default:
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	if cnameCommand.Parsed() {
+		fmt.Println(get_cname("login-green"))
+	}
 }
