@@ -12,7 +12,7 @@ type Response struct {
 	Cname []string `json:"cname"`
 }
 
-func get_cname(app string) string {
+func GetCname(app string) string {
 	token := os.Getenv("TSURU_TOKEN")
 	target := os.Getenv("TSURU_TARGET")
 	url := fmt.Sprintf("%s/apps/%s", target, app)
@@ -27,7 +27,10 @@ func get_cname(app string) string {
 	defer resp.Body.Close()
 	r := new(Response)
 	json.NewDecoder(resp.Body).Decode(r)
-	return r.Cname[0]
+	if len(r.Cname) > 0 {
+		return r.Cname[0]
+	}
+	return ""
 }
 
 func main() {
@@ -53,6 +56,6 @@ func main() {
 	}
 
 	if cnameCommand.Parsed() {
-		fmt.Println(get_cname("login-green"))
+		fmt.Println(GetCname("login-green"))
 	}
 }
