@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1 / 2018-12-27
+
+   - Adds support to HTTPS target and custom port (Guilherme Garnier)
+
 ## 1.2.1 / 2016-08-12
 
    - `app-deploy` is now defined when `deploy_dir` is defined on tsuru-bluegreen.ini
