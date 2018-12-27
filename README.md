@@ -128,6 +128,6 @@ optional arguments:
 ## Tests
 
 ```
-$ pip install -r test_requirements.txt
-$ nosetests test/*.py
+$ make testdeps
+$ make test
 ```
