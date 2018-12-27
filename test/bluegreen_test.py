@@ -27,6 +27,14 @@ class TestBlueGreen(unittest.TestCase):
     self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
 
   @httpretty.activate
+  def test_get_cname_with_custom_port(self):
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com:8081/apps/xpto',
+                           body='{"cname":["cname1", "cname2"]}')
+
+    self.bg = BlueGreen('token', 'tsuruhost.com:8081', self.config)
+    self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
+
+  @httpretty.activate
   def test_get_cname_with_http(self):
     httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto',
                            body='{"cname":["cname1", "cname2"]}')
@@ -35,11 +43,27 @@ class TestBlueGreen(unittest.TestCase):
     self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
 
   @httpretty.activate
+  def test_get_cname_with_http_custom_port(self):
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com:8080/apps/xpto',
+                           body='{"cname":["cname1", "cname2"]}')
+
+    self.bg = BlueGreen('token', 'http://tsuruhost.com:8080', self.config)
+    self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
+
+  @httpretty.activate
   def test_get_cname_with_https(self):
     httpretty.register_uri(httpretty.GET, 'https://tsuruhost.com/apps/xpto',
                            body='{"cname":["cname1", "cname2"]}')
 
     self.bg = BlueGreen('token', 'https://tsuruhost.com', self.config)
+    self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
+
+  @httpretty.activate
+  def test_get_cname_with_https_custom_port(self):
+    httpretty.register_uri(httpretty.GET, 'https://tsuruhost.com:8443/apps/xpto',
+                           body='{"cname":["cname1", "cname2"]}')
+
+    self.bg = BlueGreen('token', 'https://tsuruhost.com:8443', self.config)
     self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
 
   @httpretty.activate

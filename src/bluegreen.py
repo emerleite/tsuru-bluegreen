@@ -16,8 +16,8 @@ except:
 
 def create_connection(url):
   if url.scheme == 'https':
-    return httplib.HTTPSConnection(url.netloc, url.port)
-  return httplib.HTTPConnection(url.netloc or url.path, url.port)
+    return httplib.HTTPSConnection(url.netloc)
+  return httplib.HTTPConnection(url.netloc or url.path)
 
 class BlueGreen:
   def __init__(self, token, target, config):
