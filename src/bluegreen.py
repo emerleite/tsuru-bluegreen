@@ -15,15 +15,14 @@ except:
   from urlparse import urlparse
 
 def create_connection(url):
-  parsed = urlparse(url)
-  if parsed.scheme == 'https':
-    return httplib.HTTPSConnection(parsed.netloc, parsed.port)
-  return httplib.HTTPConnection(parsed.netloc or parsed.path, parsed.port)
+  if url.scheme == 'https':
+    return httplib.HTTPSConnection(url.netloc, url.port)
+  return httplib.HTTPConnection(url.netloc or url.path, url.port)
 
 class BlueGreen:
   def __init__(self, token, target, config):
     self.token = token
-    self.target = target
+    self.target = urlparse(target)
     self.app_name = config['name']
     self.deploy_dir = config['deploy_dir']
 
@@ -415,7 +414,7 @@ if __name__ == "__main__":
 
   #Initialization
   token = os.environ['TSURU_TOKEN']
-  target = urlparse(os.environ['TSURU_TARGET']).netloc
+  target = os.environ['TSURU_TARGET']
 
   config = Config.load('tsuru-bluegreen.ini')
 

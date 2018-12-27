@@ -7,7 +7,7 @@ from bluegreen import BlueGreen
 class TestBlueGreen(unittest.TestCase):
 
   def setUp(self):
-    config = {
+    self.config = {
       'name': 'test-app',
       'deploy_dir': '.',
       'hooks': {'before_pre' : 'echo test', 'after_swap' : 'undefined_command'},
@@ -16,7 +16,7 @@ class TestBlueGreen(unittest.TestCase):
       'webhook': {'endpoint': 'http://example.com', 'payload_extras': 'key1=value1&key2=value2'}
     }
 
-    self.bg = BlueGreen('token', 'tsuruhost.com', config)
+    self.bg = BlueGreen('token', 'tsuruhost.com', self.config)
     self.cnames = [u'cname1', u'cname2']
 
   @httpretty.activate
@@ -31,7 +31,7 @@ class TestBlueGreen(unittest.TestCase):
     httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto',
                            body='{"cname":["cname1", "cname2"]}')
 
-    self.bg.target = 'http://tsuruhost.com'
+    self.bg = BlueGreen('token', 'http://tsuruhost.com', self.config)
     self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
 
   @httpretty.activate
@@ -39,7 +39,7 @@ class TestBlueGreen(unittest.TestCase):
     httpretty.register_uri(httpretty.GET, 'https://tsuruhost.com/apps/xpto',
                            body='{"cname":["cname1", "cname2"]}')
 
-    self.bg.target = 'https://tsuruhost.com'
+    self.bg = BlueGreen('token', 'https://tsuruhost.com', self.config)
     self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
 
   @httpretty.activate
