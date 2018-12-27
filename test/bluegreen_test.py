@@ -27,6 +27,22 @@ class TestBlueGreen(unittest.TestCase):
     self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
 
   @httpretty.activate
+  def test_get_cname_with_http(self):
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto',
+                           body='{"cname":["cname1", "cname2"]}')
+
+    self.bg.target = 'http://tsuruhost.com'
+    self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
+
+  @httpretty.activate
+  def test_get_cname_with_https(self):
+    httpretty.register_uri(httpretty.GET, 'https://tsuruhost.com/apps/xpto',
+                           body='{"cname":["cname1", "cname2"]}')
+
+    self.bg.target = 'https://tsuruhost.com'
+    self.assertEqual(self.bg.get_cname('xpto'), self.cnames)
+
+  @httpretty.activate
   def test_get_cname_returns_none_when_empty(self):
     httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/apps/xpto',
                            body='{"cname":[]}')

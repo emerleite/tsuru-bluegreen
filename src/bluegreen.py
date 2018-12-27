@@ -14,11 +14,11 @@ try:
 except:
   from urlparse import urlparse
 
-def handleUrl(url):
-  if urlparse(url).scheme == 'https':
-    return httplib.HTTPSConnection(url)
-  else:
-    return httplib.HTTPConnection(url)
+def create_connection(url):
+  parsed = urlparse(url)
+  if parsed.scheme == 'https':
+    return httplib.HTTPSConnection(parsed.netloc, parsed.port)
+  return httplib.HTTPConnection(parsed.netloc or parsed.path, parsed.port)
 
 class BlueGreen:
   def __init__(self, token, target, config):
@@ -73,9 +73,7 @@ class BlueGreen:
       "Authorization": "bearer " + self.token,
       "Content-Type": "application/x-www-form-urlencoded",
      }
-
-    conn = handleUrl(self.target)
-
+    conn = create_connection(self.target)
     conn.request("POST", url, body, headers)
     response = conn.getresponse()
     return response.status == 200
@@ -84,9 +82,7 @@ class BlueGreen:
     headers = {
       "Authorization": "bearer " + self.token,
      }
-
-    conn = handleUrl(self.target)
-
+    conn = create_connection(self.target)
     conn.request("GET", url, None, headers)
     return conn.getresponse()
 
@@ -94,9 +90,7 @@ class BlueGreen:
     headers = {
       "Authorization": "bearer " + self.token,
      }
-
-    conn = handleUrl(self.target)
-
+    conn = create_connection(self.target)
     conn.request("DELETE", url, None, headers)
     return conn.getresponse()
 
@@ -149,9 +143,7 @@ class BlueGreen:
   Removing %s '%s' units from %s ...""" % (units_to_remove, process_name, app)
 
     headers = {"Authorization" : "bearer " + self.token}
-
-    conn = handleUrl(self.target)
-
+    conn = create_connection(self.target)
     conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
     if response.status != 200:
@@ -183,9 +175,7 @@ class BlueGreen:
   Adding %s '%s' units to %s ...""" % (units_to_add, process_name, app)
 
     headers = {"Authorization" : "bearer " + self.token}
-
-    conn = handleUrl(self.target)
-
+    conn = create_connection(self.target)
     conn.request("PUT", "/apps/" + app + '/units?units=' + str(units_to_add) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
     response.read()
