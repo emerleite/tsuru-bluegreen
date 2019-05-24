@@ -194,9 +194,12 @@ class BlueGreen:
       print """
   Notifying New Relic app '%s' ...
       """ % (app_id)
-      headers = {"Content-Type" : "application/x-www-form-urlencoded", "x-api-key" : api_key}
+      headers = {"Content-Type" : "application/x-www-form-urlencoded", "X-Api-Key" : api_key}
+      url = "/v2/applications/" + app_id + "/deployments.json"
+      body = 'deployment[application_id]=' + app_id + '&deployment[revision]=' + tag
+
       conn = httplib.HTTPConnection("api.newrelic.com")
-      conn.request("POST", "/deployments.xml", 'deployment[application_id]=' + app_id + '&deployment[revision]=' + tag, headers)
+      conn.request("POST", url, body, headers)
       response = conn.getresponse()
       return response.status == 200
     return False

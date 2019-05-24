@@ -307,11 +307,11 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_notify_newrelic_when_config_defined(self):
-    httpretty.register_uri(httpretty.POST, 'http://api.newrelic.com/deployments.xml',
+    httpretty.register_uri(httpretty.POST, 'http://api.newrelic.com/v2/applications/123/deployments.json',
                            data='deployment[application_id]=some-api-key&deployment[revision]=1.0',
                            content_type='application/x-www-form-urlencoded',
                            forcing_headers={
-                             'x-api-key': 'some-api-key'
+                             'X-Api-Key': 'some-api-key'
                            },
                            status=200)
 
@@ -323,14 +323,14 @@ class TestBlueGreen(unittest.TestCase):
 
   @httpretty.activate
   def test_dont_notify_newrelic_when_wrong_api_key(self):
-    httpretty.register_uri(httpretty.POST, 'http://api.newrelic.com/deployments.xml',
+    httpretty.register_uri(httpretty.POST, 'http://api.newrelic.com/v2/applications/123/deployments.json',
                            data='deployment[application_id]=some-api-key&deployment[revision]=1.0',
                            status=403)
     self.assertFalse(self.bg.notify_newrelic('1.0'))
 
   @httpretty.activate
   def test_dont_notify_newrelic_when_error(self):
-    httpretty.register_uri(httpretty.POST, 'http://api.newrelic.com/deployments.xml',
+    httpretty.register_uri(httpretty.POST, 'http://api.newrelic.com/v2/applications/123/deployments.json',
                            data='deployment[application_id]=some-api-key&deployment[revision]=1.0',
                            status=500)
     self.assertFalse(self.bg.notify_newrelic('1.0'))
