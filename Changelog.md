@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0 / 2019-05-27
+
+   - Update New Relic endpoint to v2
+
 ## 1.3.1 / 2018-12-27
 
    - Adds support to HTTPS target and custom port (Guilherme Garnier)
