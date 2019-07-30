@@ -369,6 +369,8 @@ class Config:
         newrelic_value = config.get('NewRelic', key)
         if newrelic_value:
           newrelic[key] = newrelic_value
+        else:
+          newrelic[key] = os.getenv('NEW_RELIC_' + key.upper())
 
       except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         pass
