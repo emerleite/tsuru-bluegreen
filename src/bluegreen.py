@@ -274,7 +274,7 @@ class BlueGreen:
         print """
   Error running 'before' hook. Pre deploy aborted.
         """
-        return
+        return 2
 
     deploy_arguments = ['git', 'push', '--force', app, "%s:master" % tag]
 
@@ -285,10 +285,17 @@ class BlueGreen:
     for line in iter(process.stdout.readline, ''):
       sys.stdout.write(line)
 
+    process.communicate()
+
+    deploy_status = process.returncode
+
     if not self.run_hook('after_pre', {"TAG": tag}):
         print """
   Error running 'after' hook. Pre deploy aborted.
         """
+        return 2
+
+    return deploy_status
 
   def deploy_swap(self, apps, cname):
     print """
@@ -300,15 +307,15 @@ class BlueGreen:
         print """
   Error running 'before' hook. Pre deploy aborted.
         """
-        return
+        return 2
 
     if not self.add_units(apps[1], self.total_units(apps[0])):
-      sys.exit()
+      return 2
 
     if not self.remove_cname(apps[0], cname):
       print "Error removing cname of %s. Aborting..." % apps[0]
       self.remove_units(apps[1], 1)
-      sys.exit()
+      return 2
 
     if self.set_cname(apps[1], cname):
       self.remove_units(apps[0])
@@ -325,10 +332,15 @@ class BlueGreen:
         print """
   Error running 'before' hook. Pre deploy aborted.
           """
+        return 2
     else:
       print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
       self.set_cname(apps[0], cname)
       self.remove_units(apps[1], 1)
+      return 2
+
+    return 0
+    
 
 class Config:
   @classmethod
@@ -441,8 +453,8 @@ if __name__ == "__main__":
   app_deploy = config['deploy_dir'] != None
 
   if args.action == 'pre':
-    bluegreen.deploy_pre(pre, args.tag, app_deploy)
+    sys.exit(bluegreen.deploy_pre(pre, args.tag, app_deploy))
   elif args.action == 'cname':
     print bluegreen.get_cname(apps[0])
   elif args.action == 'swap':
-    bluegreen.deploy_swap(apps, cname)
+    sys.exit(bluegreen.deploy_swap(apps, cname))
