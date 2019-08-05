@@ -455,18 +455,3 @@ class TestBlueGreen(unittest.TestCase):
       calls['count'] += 1
       return result
     return total_units
-
-
-class MockStdout(object):
-
-  def __init__(self):
-    pass
-    # self.stdout = self.generate_stdout()
-
-  def generate_stdout(self):
-    yield 'Deploying...'
-    yield ''
-
-  def print_output(self):
-    return ''
-    # return self.stdout.next()
