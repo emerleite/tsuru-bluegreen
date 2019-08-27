@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1 / 2019-08-27
+
+   - Handle cases in order to exit with the appropriated status
+
 ## 1.4.0 / 2019-05-27
 
    - Update New Relic endpoint to v2
