@@ -1,6 +1,7 @@
 import unittest
 from mock import MagicMock
 from mock import Mock
+from mock import patch
 import httpretty
 from bluegreen import BlueGreen
 
@@ -396,6 +397,56 @@ class TestBlueGreen(unittest.TestCase):
 
   def test_run_hook_should_return_true_on_undefined_hook(self):
     self.assertTrue(self.bg.run_hook('after_pre'))
+
+  @patch('subprocess.Popen', return_value=Mock())
+  def test_deploy_pre_should_return_zero_when_success(self, subprocess_):
+    self.bg.remove_units = MagicMock()
+    self.bg.env_set = MagicMock()
+    self.bg.run_hook = MagicMock(return_value=True)
+
+    subprocess_.return_value.stdout.readline.return_value = ''
+    subprocess_.return_value.communicate = MagicMock()
+    subprocess_.return_value.returncode = 0
+
+    self.assertEqual(self.bg.deploy_pre('test-blue', 'master', True), 0)
+
+  @patch('subprocess.Popen', return_value=Mock())
+  def test_deploy_pre_should_return_non_zero_when_fails(self, subprocess_):
+    self.bg.remove_units = MagicMock()
+    self.bg.env_set = MagicMock()
+    self.bg.run_hook = MagicMock(return_value=True)
+
+    subprocess_.return_value.stdout.readline.return_value = ''
+    subprocess_.return_value.communicate = MagicMock()
+    subprocess_.return_value.returncode = 2
+
+    self.assertEqual(self.bg.deploy_pre('test-blue', 'master', True), 2)
+
+  def test_deploy_swap_should_return_zero_when_success(self):
+    self.bg.env_get = MagicMock(return_value=None)
+    self.bg.run_hook = MagicMock(return_value=True)
+    self.bg.add_units = MagicMock(return_value=True)
+    self.bg.total_units = MagicMock(return_value=3)
+    self.bg.remove_cname = MagicMock(return_value=True)
+    self.bg.set_cname = MagicMock(return_value=True)
+    self.bg.remove_units = MagicMock()
+    self.bg.notify_newrelic = MagicMock()
+    self.bg.notify_grafana = MagicMock()
+    self.bg.run_webhook = MagicMock()
+    self.assertEqual(self.bg.deploy_swap(['test-blue', 'test-green'], ['cname-blue', 'cname-green']), 0)
+
+  def test_deploy_swap_should_return_non_zero_when_fails(self):
+    self.bg.env_get = MagicMock(return_value=None)
+    self.bg.run_hook = MagicMock(return_value=True)
+    self.bg.add_units = MagicMock(return_value=True)
+    self.bg.total_units = MagicMock(return_value=3)
+    self.bg.remove_cname = MagicMock(return_value=False)
+    self.bg.set_cname = MagicMock(return_value=True)
+    self.bg.remove_units = MagicMock()
+    self.bg.notify_newrelic = MagicMock()
+    self.bg.notify_grafana = MagicMock()
+    self.bg.run_webhook = MagicMock()
+    self.assertEqual(self.bg.deploy_swap(['test-blue', 'test-green'], ['cname-blue', 'cname-green']), 2)
 
   def mock_total_units(self, values):
     calls = {'count': 0}
