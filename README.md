@@ -2,10 +2,6 @@
 
 A blue-green deployment plugin for tsuru client
 
-## Dependencies
-
-Python 2.7
-
 ## Installation
 
 ```
