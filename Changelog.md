@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.2 / 2020-04-11
+
+   - Allow to configure NewRelic using env vars (Henrique)
+
 ## 1.4.1 / 2019-08-27
 
    - Handle cases in order to exit with the appropriated status
