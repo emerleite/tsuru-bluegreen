@@ -46,6 +46,8 @@ before_swap: <command to run before 'swap' action>
 after_swap: <command to run after a successful 'swap' action>
 ```
 
+**Note:** if a NewRelic key's value is left blank, the plugin will try to get it from an environment variable (`NEW_RELIC_API_KEY` or `NEW_RELIC_APP_ID`).
+
 ### 'Application' section
 
 Based on the `name` configuration value, you must have to have two tsuru applications and git remotes named: your_app**-blue** and your_app**-green**.

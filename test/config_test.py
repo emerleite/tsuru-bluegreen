@@ -1,3 +1,4 @@
+import os
 import unittest
 from mock import MagicMock
 from mock import Mock
@@ -22,6 +23,17 @@ class TestConfig(unittest.TestCase):
   def test_load_newrelic_config(self):
     self.assertEqual('some-api-key', self.config['newrelic']['api_key'])
     self.assertEqual('123', self.config['newrelic']['app_id'])
+
+  def test_load_newrelic_with_environment_variables(self):
+    os.environ['NEW_RELIC_API_KEY'] = 'api-key-from-environment'
+    os.environ['NEW_RELIC_APP_ID'] = 'app-id-from-environment'
+    self.config = Config.load('test/new-relic-with-blank-values.ini')
+
+    self.assertEqual('api-key-from-environment', self.config['newrelic']['api_key'])
+    self.assertEqual('app-id-from-environment', self.config['newrelic']['app_id'])
+
+    del os.environ['NEW_RELIC_API_KEY']
+    del os.environ['NEW_RELIC_APP_ID']
 
   def test_load_grafana_config(self):
     self.assertEqual('http://tcp.logstash.example.com', self.config['grafana']['endpoint'])
