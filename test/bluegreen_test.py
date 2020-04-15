@@ -113,6 +113,21 @@ class TestBlueGreen(unittest.TestCase):
                            status=200)
 
     self.assertTrue(self.bg.swap("app1", "app2"))
+    requests = httpretty.HTTPretty.latest_requests
+    self.assertEqual(len(requests), 1)
+    self.assertEqual({"app1": ["app1"], "app2": ["app2"], "force": ["true"], "cnameOnly": ["true"]}, requests[0].parsed_body)
+
+  @httpretty.activate
+  def test_swap_force_false(self):
+    httpretty.register_uri(httpretty.POST, "http://tsuruhost.com/swap",
+                           data="app1=app1&app2=app2&force=false&cnameOnly=true",
+                           status=200)
+
+    self.assertTrue(self.bg.swap("app1", "app2", False))
+    requests = httpretty.HTTPretty.latest_requests
+    self.assertEqual(len(requests), 1)
+    self.assertEqual({"app1": ["app1"], "app2": ["app2"], "force": ["false"], "cnameOnly": ["true"]}, requests[0].parsed_body)
+
 
   @httpretty.activate
   def test_env_set_return_true_when_can_set(self):

@@ -93,9 +93,9 @@ class BlueGreen:
     conn.request("DELETE", url, None, headers)
     return conn.getresponse()
 
-  def swap(self, app1, app2):
+  def swap(self, app1, app2, force=True):
     url = "/swap"
-    body = "app1={}&app2={}&force=true&cnameOnly=true".format(app1, app2)
+    body = "app1={}&app2={}&force={}&cnameOnly=true".format(app1, app2, str(force).lower())
     return self.post(url, body)
 
   def env_set(self, app, key, value):
