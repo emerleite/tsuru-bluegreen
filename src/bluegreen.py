@@ -272,7 +272,7 @@ class BlueGreen:
 
     if not self.run_hook('before_pre', {"TAG": tag}):
         print """
-  Error running 'before' hook. Pre deploy aborted.
+  Error running 'before_pre' hook. Pre deploy aborted.
         """
         return 2
 
@@ -291,7 +291,7 @@ class BlueGreen:
 
     if not self.run_hook('after_pre', {"TAG": tag}):
         print """
-  Error running 'after' hook. Pre deploy aborted.
+  Error running 'after_pre' hook. Pre deploy aborted.
         """
         return 2
 
@@ -305,38 +305,32 @@ class BlueGreen:
 
     if not self.run_hook('before_swap', {"TAG": tag}):
         print """
-  Error running 'before' hook. Pre deploy aborted.
+  Error running 'before_swap' hook. Pre deploy aborted.
         """
         return 2
 
     if not self.add_units(apps[1], self.total_units(apps[0])):
       return 2
-
-    if not self.remove_cname(apps[0], cname):
-      print "Error removing cname of %s. Aborting..." % apps[0]
+    
+    if not self.swap(apps[0], apps[1], False):
+      print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])          
       self.remove_units(apps[1], 1)
       return 2
 
-    if self.set_cname(apps[1], cname):
-      self.remove_units(apps[0])
+    self.remove_units(apps[0])
 
-      print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
+    print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
 
-      self.notify_newrelic(tag)
+    self.notify_newrelic(tag)
 
-      self.notify_grafana(apps[1], tag)
+    self.notify_grafana(apps[1], tag)
 
-      self.run_webhook(tag)
+    self.run_webhook(tag)
 
-      if not self.run_hook('after_swap', {"TAG": tag}):
-        print """
-  Error running 'before' hook. Pre deploy aborted.
-          """
-        return 2
-    else:
-      print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
-      self.set_cname(apps[0], cname)
-      self.remove_units(apps[1], 1)
+    if not self.run_hook('after_swap', {"TAG": tag}):
+      print """
+Error running 'after_swap' hook.
+        """
       return 2
 
     return 0
