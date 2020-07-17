@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.3 / 2020-07/17
+
+   - Deploy_swap method this will only be considered valid if the previous step, add_units works as expected. (mportela)
+
 ## 1.4.2 / 2020-04-11
 
    - Allow to configure NewRelic using env vars (Henrique)
