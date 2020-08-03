@@ -143,8 +143,12 @@ class BlueGreen:
 
     headers = {"Authorization" : "bearer " + self.token}
     conn = create_connection(self.target)
-    conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
+    uri = "/apps/" + app + '/units?units=' + \
+        str(units_to_remove) + '&process=' + process_name
+    conn.request("DELETE", uri, '', headers)
     response = conn.getresponse()
+    print "Request: '%s%s'" % ((self.target.netloc or self.target.path), uri)
+    print "Response: '%s %s'" % (response.status, response.reason)
     if response.status != 200:
       print "Error removing '%s' units from %s. You'll need to remove manually." % (process_name, app)
       return False
@@ -162,6 +166,8 @@ class BlueGreen:
 
       if units_to_add > 0:
         results.append(self.add_units_per_process_type(app, units_to_add, units, process_name))
+
+      time.sleep(30)
 
     for result in results:
       if not result:
@@ -311,9 +317,9 @@ class BlueGreen:
 
     if not self.add_units(apps[1], self.total_units(apps[0])):
       return 2
-    
+
     if not self.swap(apps[0], apps[1], False):
-      print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])          
+      print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
       self.remove_units(apps[1], 1)
       return 2
 
@@ -334,7 +340,7 @@ Error running 'after_swap' hook.
       return 2
 
     return 0
-    
+
 
 class Config:
   @classmethod
