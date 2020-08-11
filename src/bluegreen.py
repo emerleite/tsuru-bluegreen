@@ -146,10 +146,17 @@ class BlueGreen:
     conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
     if response.status != 200:
-      print "Error removing '%s' units from %s. You'll need to remove manually." % (process_name, app)
+      max_tries = 3
+      for i in range(max_tries):
+        print "Error removing '%s' units from %s. Retrying %d..." % (process_name, app, i)
+        time.sleep(30)
+        conn.request("DELETE", uri, '', headers)
+        response = conn.getresponse()
+        if response.status == 200:
+          return True
       return False
-
-    return True
+    else:
+      return True
 
   def add_units(self, app, total_units_after_add):
     total_units = self.total_units(app)
@@ -311,9 +318,9 @@ class BlueGreen:
 
     if not self.add_units(apps[1], self.total_units(apps[0])):
       return 2
-    
+
     if not self.swap(apps[0], apps[1], False):
-      print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])          
+      print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
       self.remove_units(apps[1], 1)
       return 2
 
@@ -334,7 +341,7 @@ Error running 'after_swap' hook.
       return 2
 
     return 0
-    
+
 
 class Config:
   @classmethod
