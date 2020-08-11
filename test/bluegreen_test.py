@@ -258,6 +258,22 @@ class TestBlueGreen(unittest.TestCase):
     self.assertEqual(len(requests), 5)
 
   @httpretty.activate
+  def test_remove_units_should_return_true_even_if_it_fails_at_firts_try(self):
+    self.bg.total_units = MagicMock(return_value={'web': 1})
+
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
+                           data='',
+                           responses=[
+                             httpretty.Response(body='', status=500),
+                             httpretty.Response(body='', status=200)
+                           ])
+
+    self.assertTrue(self.bg.remove_units('xpto'))
+
+    requests = httpretty.HTTPretty.latest_requests
+    self.assertEqual(len(requests), 2)
+
+  @httpretty.activate
   def test_add_units_should_return_true_when_adds_web_units(self):
     self.bg.total_units = MagicMock(side_effect=self.mock_total_units([{'web': 1}, {'web': 2}]))
 
