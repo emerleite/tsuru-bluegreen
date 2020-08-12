@@ -150,12 +150,17 @@ class BlueGreen:
     if response.status != 200:
       for i in range(self.retry_times):
         response.read() # This acts as a flush (necessary)
-        print "Error removing '%s' units from %s. Retrying %d..." % (process_name, app, i)
+        print """
+        Error removing '%s' units from %s. Retrying %d...""" % (process_name, app, i+1)
         time.sleep(self.retry_sleep)
         conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
         response = conn.getresponse()
         if response.status == 200:
+          print """
+        Successfully removed '%s' unit from %s""" % (process_name, app)
           return True
+      print """
+      Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, i+1)
       return False
     else:
       return True
