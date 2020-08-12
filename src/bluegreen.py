@@ -148,6 +148,7 @@ class BlueGreen:
     if response.status != 200:
       max_tries = 3
       for i in range(max_tries):
+        response.read() # This acts as a flush
         print "Error removing '%s' units from %s. Retrying %d..." % (process_name, app, i)
         time.sleep(30)
         conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)

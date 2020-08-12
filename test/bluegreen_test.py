@@ -265,13 +265,15 @@ class TestBlueGreen(unittest.TestCase):
                            data='',
                            responses=[
                              httpretty.Response(body='', status=500),
+                             httpretty.Response(body='', status=500),
+                             httpretty.Response(body='', status=500),
                              httpretty.Response(body='', status=200)
                            ])
 
     self.assertTrue(self.bg.remove_units('xpto'))
 
     requests = httpretty.HTTPretty.latest_requests
-    self.assertEqual(len(requests), 2)
+    self.assertEqual(len(requests), 4)
 
   @httpretty.activate
   def test_add_units_should_return_true_when_adds_web_units(self):
