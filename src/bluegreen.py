@@ -25,6 +25,8 @@ class BlueGreen:
     self.target = urlparse(target)
     self.app_name = config['name']
     self.deploy_dir = config['deploy_dir']
+    self.retry_times = config['retry_times']
+    self.retry_sleep = config['retry_sleep']
 
     try:
       self.hooks = config['hooks']
@@ -146,11 +148,10 @@ class BlueGreen:
     conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
     if response.status != 200:
-      max_tries = 3
-      for i in range(max_tries):
-        response.read() # This acts as a flush
+      for i in range(self.retry_times):
+        response.read() # This acts as a flush (necessary)
         print "Error removing '%s' units from %s. Retrying %d..." % (process_name, app, i)
-        time.sleep(30)
+        time.sleep(self.retry_sleep)
         conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
         response = conn.getresponse()
         if response.status == 200:
@@ -356,6 +357,14 @@ class Config:
       deploy_dir = config.get('Application', 'deploy_dir')
     except ConfigParser.NoOptionError:
       deploy_dir = None
+    try:
+      retry_times = int(config.get('UnitsRemoval', 'retry_times'))
+    except (ConfigParser.NoSectionError ,ConfigParser.NoOptionError, ValueError):
+      retry_times = 0
+    try:
+      retry_sleep = int(config.get('UnitsRemoval', 'retry_sleep'))
+    except (ConfigParser.NoSectionError ,ConfigParser.NoOptionError, ValueError):
+      retry_sleep = 0
 
     hooks = {
       'before_pre': None,
@@ -419,7 +428,14 @@ class Config:
       except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         pass
 
-    return {'name' : app_name, 'deploy_dir' : deploy_dir , 'hooks' : hooks, 'newrelic' : newrelic, 'grafana' : grafana, 'webhook' : webhook}
+    return {'name' : app_name,
+            'deploy_dir' : deploy_dir,
+            'retry_times' : retry_times,
+            'retry_sleep' : retry_sleep,
+            'hooks' : hooks,
+            'newrelic' : newrelic,
+            'grafana' : grafana,
+            'webhook' : webhook}
 
 if __name__ == "__main__":
   #Parameters

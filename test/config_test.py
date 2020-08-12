@@ -45,3 +45,7 @@ class TestConfig(unittest.TestCase):
 
   def test_load_app_deploy_config(self):
     self.assertEqual("'.'", self.config['deploy_dir'])
+
+  def test_load_units_removal_config(self):
+    self.assertEqual(3, self.config['retry_times'])
+    self.assertEqual(0, self.config['retry_sleep'])

@@ -11,6 +11,8 @@ class TestBlueGreen(unittest.TestCase):
     self.config = {
       'name': 'test-app',
       'deploy_dir': '.',
+      'retry_times': 3,
+      'retry_sleep': 0,
       'hooks': {'before_pre' : 'echo test', 'after_swap' : 'undefined_command'},
       'newrelic': {'api_key' : 'some-api-key', 'app_id' : '123'},
       'grafana': {'endpoint' : 'http://tcp.logstash.example.com', 'index' : 'test-index'},
