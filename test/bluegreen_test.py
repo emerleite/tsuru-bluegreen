@@ -263,7 +263,7 @@ class TestBlueGreen(unittest.TestCase):
     self.assertFalse(self.bg.remove_units('xpto'))
 
     requests = httpretty.HTTPretty.latest_requests
-    self.assertEqual(len(requests), 6)
+    self.assertEqual(len(requests), 5)
 
   @httpretty.activate
   def test_remove_units_should_return_true_even_if_it_fails_at_firts_try(self):
@@ -491,24 +491,6 @@ class TestBlueGreen(unittest.TestCase):
     self.bg.run_webhook = MagicMock()
     self.assertEqual(self.bg.deploy_swap(['test-blue', 'test-green'], ['cname-blue', 'cname-green']), 2)
     self.bg.swap.assert_called_once_with('test-blue', 'test-green', False)
-
-  @httpretty.activate
-  def test_unlock_app_should_return_false_on_fail(self):
-    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/lock',
-                           data='',
-                           status=400)
-    self.assertFalse(self.bg.unlock_app('xpto'))
-    requests = httpretty.HTTPretty.latest_requests
-    self.assertEqual(len(requests), 1)
-
-  @httpretty.activate
-  def test_unlock_app_should_return_true_on_success(self):
-    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/lock',
-                           data='',
-                           status=200)
-    self.assertTrue(self.bg.unlock_app('xpto'))
-    requests = httpretty.HTTPretty.latest_requests
-    self.assertEqual(len(requests), 1)
 
   def mock_total_units(self, values):
     calls = {'count': 0}

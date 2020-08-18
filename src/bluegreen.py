@@ -127,12 +127,6 @@ class BlueGreen:
 
     return units
 
-  def unlock_app(self, app):
-    print "\n    Forcing app unlock..."
-    response = self.delete("/apps/{}/lock".format(app))
-
-    return response.status == 200
-
   def remove_units(self, app, units_to_keep=0):
       total_units = self.total_units(app)
       results = []
@@ -170,23 +164,6 @@ class BlueGreen:
         Successfully removed '%s' unit from %s""" % (process_name, app)
           return True
 
-      # We're all out of patience here, so we'll force an unlock
-      # to try to remove the stuck unit
-      if self.unlock_app(app):
-        print """
-        Successfully unlocked app '%s'...""" % (app)
-
-        response.read() # This acts as a flush (necessary)
-        conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
-        response = conn.getresponse()
-
-        if response.status == 200:
-          print """
-        Successfully removed '%s' unit from %s""" % (process_name, app)
-          return True
-
-      print """
-      Error unlocking '%s'...""" % (app)
       print """
       Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, i+1)
       return False
