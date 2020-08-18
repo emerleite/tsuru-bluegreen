@@ -149,11 +149,11 @@ class BlueGreen:
     response = conn.getresponse()
 
     if response.status != 200:
-      for i in range(self.retry_times):
+      for i in range(1, self.retry_times+1):
 
         response.read() # This acts as a flush (necessary)
         print """
-    Error removing '%s' units from %s. Retrying %d...""" % (process_name, app, i+1)
+    Error removing '%s' units from %s. Retrying %d...""" % (process_name, app, i)
 
         time.sleep(self.retry_sleep)
         conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
@@ -165,7 +165,7 @@ class BlueGreen:
           return True
 
       print """
-      Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, i+1)
+      Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, i)
       return False
     else:
       return True
@@ -367,13 +367,15 @@ class Config:
       deploy_dir = config.get('Application', 'deploy_dir')
     except ConfigParser.NoOptionError:
       deploy_dir = None
+
     try:
-      retry_times = int(config.get('UnitsRemoval', 'retry_times'))
-    except (ConfigParser.NoSectionError ,ConfigParser.NoOptionError, ValueError):
+      retry_times = config.getint('UnitsRemoval', 'retry_times')
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError, ValueError):
       retry_times = 0
+
     try:
-      retry_sleep = int(config.get('UnitsRemoval', 'retry_sleep'))
-    except (ConfigParser.NoSectionError ,ConfigParser.NoOptionError, ValueError):
+      retry_sleep = config.getint('UnitsRemoval', 'retry_sleep')
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError, ValueError):
       retry_sleep = 0
 
     hooks = {
