@@ -162,3 +162,8 @@ optional arguments:
 $ make testdeps
 $ make test
 ```
+
+Or, using Docker, go to `test/` and run:
+```
+$ sh run_tests.sh
+```
