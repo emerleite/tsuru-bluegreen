@@ -163,7 +163,7 @@ $ make testdeps
 $ make test
 ```
 
-Or, using Docker, go to `test/` and run:
+Or, if you wish to use Docker;
 ```
-$ sh run_tests.sh
+$ make docker-test
 ```
