@@ -149,9 +149,15 @@ class BlueGreen:
     response = conn.getresponse()
 
     if response.status != 200:
-      for i in range(1, self.retry_times+1):
+      response.read() # Flush buffer
+      conn.request("GET", "/events?target.value=" + app + "&running=true", '', headers)
+      response = conn.getresponse()
+      if response.status == 200:
+        print """
+    There's a running event for this app. Wait for the plugin's configured removal retries."""
 
-        response.read() # This acts as a flush (necessary)
+      for i in range(1, self.retry_times+1):
+        response.read() # Flush buffer
         print """
     Error removing '%s' units from %s. Retrying %d...""" % (process_name, app, i)
 

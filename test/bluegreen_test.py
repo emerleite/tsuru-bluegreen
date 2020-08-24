@@ -237,9 +237,14 @@ class TestBlueGreen(unittest.TestCase):
     httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/lock',
                            data='',
                            status=400)
+
     httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            status=500)
+
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/events?target.value=xpto&running=true',
+                           data='',
+                           status=200)
 
     self.assertFalse(self.bg.remove_units('xpto'))
 
@@ -250,6 +255,7 @@ class TestBlueGreen(unittest.TestCase):
     httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/lock',
                            data='',
                            status=400)
+
     httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            responses=[
@@ -260,10 +266,14 @@ class TestBlueGreen(unittest.TestCase):
                                httpretty.Response(body='', status=200)
                            ])
 
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/events?target.value=xpto&running=true',
+                           data='',
+                           status=200)
+
     self.assertFalse(self.bg.remove_units('xpto'))
 
     requests = httpretty.HTTPretty.latest_requests
-    self.assertEqual(len(requests), 5)
+    self.assertEqual(len(requests), 6)
 
   @httpretty.activate
   def test_remove_units_should_return_true_even_if_it_fails_at_firts_try(self):
@@ -278,10 +288,14 @@ class TestBlueGreen(unittest.TestCase):
                              httpretty.Response(body='', status=200)
                            ])
 
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/events?target.value=xpto&running=true',
+                           data='',
+                           status=200)
+
     self.assertTrue(self.bg.remove_units('xpto'))
 
     requests = httpretty.HTTPretty.latest_requests
-    self.assertEqual(len(requests), 4)
+    self.assertEqual(len(requests), 5)
 
   @httpretty.activate
   def test_add_units_should_return_true_when_adds_web_units(self):
