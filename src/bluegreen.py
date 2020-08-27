@@ -25,6 +25,8 @@ class BlueGreen:
     self.target = urlparse(target)
     self.app_name = config['name']
     self.deploy_dir = config['deploy_dir']
+    self.retry_times = config['retry_times']
+    self.retry_sleep = config['retry_sleep']
 
     try:
       self.hooks = config['hooks']
@@ -145,11 +147,34 @@ class BlueGreen:
     conn = create_connection(self.target)
     conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
     response = conn.getresponse()
-    if response.status != 200:
-      print "Error removing '%s' units from %s. You'll need to remove manually." % (process_name, app)
-      return False
 
-    return True
+    if response.status != 200:
+      response.read() # Flush buffer
+      conn.request("GET", "/events?target.value=" + app + "&running=true", '', headers)
+      response = conn.getresponse()
+      if response.status == 200:
+        print """
+    There's a running event for this app. Wait for the plugin's configured removal retries."""
+
+      for i in range(1, self.retry_times+1):
+        response.read() # Flush buffer
+        print """
+    Error removing '%s' units from %s. Retrying %d...""" % (process_name, app, i)
+
+        time.sleep(self.retry_sleep)
+        conn.request("DELETE", "/apps/" + app + '/units?units=' + str(units_to_remove) + '&process=' + process_name, '', headers)
+        response = conn.getresponse()
+
+        if response.status == 200:
+          print """
+        Successfully removed '%s' unit from %s""" % (process_name, app)
+          return True
+
+      print """
+      Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, i)
+      return False
+    else:
+      return True
 
   def add_units(self, app, total_units_after_add):
     total_units = self.total_units(app)
@@ -311,9 +336,9 @@ class BlueGreen:
 
     if not self.add_units(apps[1], self.total_units(apps[0])):
       return 2
-    
+
     if not self.swap(apps[0], apps[1], False):
-      print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])          
+      print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
       self.remove_units(apps[1], 1)
       return 2
 
@@ -334,7 +359,7 @@ Error running 'after_swap' hook.
       return 2
 
     return 0
-    
+
 
 class Config:
   @classmethod
@@ -348,6 +373,16 @@ class Config:
       deploy_dir = config.get('Application', 'deploy_dir')
     except ConfigParser.NoOptionError:
       deploy_dir = None
+
+    try:
+      retry_times = config.getint('UnitsRemoval', 'retry_times')
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError, ValueError):
+      retry_times = 0
+
+    try:
+      retry_sleep = config.getint('UnitsRemoval', 'retry_sleep')
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError, ValueError):
+      retry_sleep = 0
 
     hooks = {
       'before_pre': None,
@@ -411,7 +446,14 @@ class Config:
       except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
         pass
 
-    return {'name' : app_name, 'deploy_dir' : deploy_dir , 'hooks' : hooks, 'newrelic' : newrelic, 'grafana' : grafana, 'webhook' : webhook}
+    return {'name' : app_name,
+            'deploy_dir' : deploy_dir,
+            'retry_times' : retry_times,
+            'retry_sleep' : retry_sleep,
+            'hooks' : hooks,
+            'newrelic' : newrelic,
+            'grafana' : grafana,
+            'webhook' : webhook}
 
 if __name__ == "__main__":
   #Parameters

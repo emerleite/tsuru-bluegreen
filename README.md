@@ -44,6 +44,10 @@ before_pre: <command to run before 'pre' action>
 after_pre: <command to run after a successful 'pre' action>
 before_swap: <command to run before 'swap' action>
 after_swap: <command to run after a successful 'swap' action>
+
+[UnitsRemoval]
+retry_times: 20 <how many times to retry removing a unit>
+retry_sleep: 10 <how much time to wait between tries>
 ```
 
 **Note:** if a NewRelic key's value is left blank, the plugin will try to get it from an environment variable (`NEW_RELIC_API_KEY` or `NEW_RELIC_APP_ID`).
@@ -87,7 +91,32 @@ before_pre: ./script.sh
 $ tsuru bluegreen pre -t some-tag
 ```
 
-In this case, if `curl` command fails, the `pre` action will be cancelled.
+In this case, if `curl` command fails, the `pre` action will be
+cancelled.
+
+### 'UnitsRemoval' section
+
+There's an issue when performing the swap of an app with multiple units.
+After the first unit is removed, errors are encountered when trying to
+remove the remaining processes.
+
+According to [tsuru](https://github.com/tsuru/tsuru) contributors,
+this behavior is most likely do to the project's internal lock scheme.
+
+This section defines how many times the plugin is going to retry
+removing a unit and how much time will it wait between tries. For
+example, to tell `bluegreen` to retry removing a unit twenty (20)
+times and to wait ten (10) seconds between each try, write this to you
+`.ini` fiel:
+
+```
+[UnitsRemoval]
+retry_times: 20
+retry_sleep: 10
+```
+
+> **Note:** experimentation showed that small values for `retry_sleep`
+> and large values for `retry_times` yields better usability.
 
 ## Example
 
@@ -132,4 +161,9 @@ optional arguments:
 ```
 $ make testdeps
 $ make test
+```
+
+Or, if you wish to use Docker;
+```
+$ make docker-test
 ```

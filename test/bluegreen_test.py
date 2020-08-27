@@ -11,6 +11,8 @@ class TestBlueGreen(unittest.TestCase):
     self.config = {
       'name': 'test-app',
       'deploy_dir': '.',
+      'retry_times': 3,
+      'retry_sleep': 0,
       'hooks': {'before_pre' : 'echo test', 'after_swap' : 'undefined_command'},
       'newrelic': {'api_key' : 'some-api-key', 'app_id' : '123'},
       'grafana': {'endpoint' : 'http://tcp.logstash.example.com', 'index' : 'test-index'},
@@ -232,9 +234,17 @@ class TestBlueGreen(unittest.TestCase):
   def test_remove_units_should_return_false_when_doesnt_remove(self):
     self.bg.total_units = MagicMock(return_value={'web': 2})
 
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/lock',
+                           data='',
+                           status=400)
+
     httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            status=500)
+
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/events?target.value=xpto&running=true',
+                           data='',
+                           status=200)
 
     self.assertFalse(self.bg.remove_units('xpto'))
 
@@ -242,17 +252,50 @@ class TestBlueGreen(unittest.TestCase):
   def test_remove_units_should_return_false_when_doesnt_remove_all_process_types(self):
     self.bg.total_units = MagicMock(return_value={'web': 2, 'resque': 1})
 
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/lock',
+                           data='',
+                           status=400)
+
     httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
                            data='',
                            responses=[
                                httpretty.Response(body='', status=500),
+                               httpretty.Response(body='', status=500),
+                               httpretty.Response(body='', status=500),
+                               httpretty.Response(body='', status=500),
                                httpretty.Response(body='', status=200)
                            ])
+
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/events?target.value=xpto&running=true',
+                           data='',
+                           status=200)
 
     self.assertFalse(self.bg.remove_units('xpto'))
 
     requests = httpretty.HTTPretty.latest_requests
-    self.assertEqual(len(requests), 2)
+    self.assertEqual(len(requests), 6)
+
+  @httpretty.activate
+  def test_remove_units_should_return_true_even_if_it_fails_at_firts_try(self):
+    self.bg.total_units = MagicMock(return_value={'web': 1})
+
+    httpretty.register_uri(httpretty.DELETE, 'http://tsuruhost.com/apps/xpto/units',
+                           data='',
+                           responses=[
+                             httpretty.Response(body='', status=500),
+                             httpretty.Response(body='', status=500),
+                             httpretty.Response(body='', status=500),
+                             httpretty.Response(body='', status=200)
+                           ])
+
+    httpretty.register_uri(httpretty.GET, 'http://tsuruhost.com/events?target.value=xpto&running=true',
+                           data='',
+                           status=200)
+
+    self.assertTrue(self.bg.remove_units('xpto'))
+
+    requests = httpretty.HTTPretty.latest_requests
+    self.assertEqual(len(requests), 5)
 
   @httpretty.activate
   def test_add_units_should_return_true_when_adds_web_units(self):
