@@ -341,10 +341,10 @@ class BlueGreen:
       print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
       self.remove_units(apps[1], 1)
       return 2
+    
+    print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
 
     self.remove_units(apps[0])
-
-    print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
 
     self.notify_newrelic(tag)
 
