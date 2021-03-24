@@ -73,7 +73,7 @@ class BlueGreen:
     headers = {
       "Authorization": "bearer " + self.token,
       "Content-Type": "application/x-www-form-urlencoded",
-     }
+    }
     conn = create_connection(self.target)
     conn.request("POST", url, body, headers)
     response = conn.getresponse()
@@ -82,7 +82,7 @@ class BlueGreen:
   def get(self, url):
     headers = {
       "Authorization": "bearer " + self.token,
-     }
+    }
     conn = create_connection(self.target)
     conn.request("GET", url, None, headers)
     return conn.getresponse()
@@ -90,7 +90,7 @@ class BlueGreen:
   def delete(self, url):
     headers = {
       "Authorization": "bearer " + self.token,
-     }
+    }
     conn = create_connection(self.target)
     conn.request("DELETE", url, None, headers)
     return conn.getresponse()
@@ -341,10 +341,10 @@ class BlueGreen:
       print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
       self.remove_units(apps[1], 1)
       return 2
+    
+    print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
 
     self.remove_units(apps[0])
-
-    print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
 
     self.notify_newrelic(tag)
 
@@ -458,7 +458,7 @@ class Config:
 if __name__ == "__main__":
   #Parameters
   parser = argparse.ArgumentParser(description='Tsuru blue-green deployment (pre and live).',
-                                   usage='tsuru bluegreen action [options]')
+                                  usage='tsuru bluegreen action [options]')
 
   parser.add_argument('action', metavar='action', help='pre or swap', choices=['pre', 'swap', 'cname'])
   parser.add_argument('-t', '--tag', metavar='TAG', help='Tag to be deployed (default: master)', nargs='?', default="master")
