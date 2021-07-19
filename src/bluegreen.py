@@ -170,8 +170,9 @@ class BlueGreen:
         Successfully removed '%s' unit from %s""" % (process_name, app)
           return True
 
+      retries = self.retry_times if self.retry_times else 1
       print """
-      Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, i)
+      Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, retries)
       return False
     else:
       return True
@@ -341,7 +342,7 @@ class BlueGreen:
       print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
       self.remove_units(apps[1], 1)
       return 2
-    
+
     print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
 
     self.remove_units(apps[0])
