@@ -170,9 +170,9 @@ class BlueGreen:
         Successfully removed '%s' unit from %s""" % (process_name, app)
           return True
 
-      retries = self.retry_times if self.retry_times else 1
+      try_times = self.retry_times + 1 if self.retry_times else 1
       print """
-      Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, retries)
+      Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, try_times)
       return False
     else:
       return True
