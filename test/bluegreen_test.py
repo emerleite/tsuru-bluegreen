@@ -506,6 +506,33 @@ class TestBlueGreen(unittest.TestCase):
     self.assertEqual(self.bg.deploy_swap(['test-blue', 'test-green'], ['cname-blue', 'cname-green']), 2)
     self.bg.swap.assert_called_once_with('test-blue', 'test-green', False)
 
+  def test_swap_retries_should_return_zero_when_success(self):
+    self.config['retry_times'] = 0
+    self.bg.env_get = MagicMock(return_value=None)
+    self.bg.run_hook = MagicMock(return_value=True)
+    self.bg.add_units = MagicMock(return_value=True)
+    self.bg.total_units = MagicMock(return_value=3)
+    self.bg.swap = MagicMock(return_value=True)
+    self.bg.remove_units = MagicMock()
+    self.bg.notify_newrelic = MagicMock()
+    self.bg.notify_grafana = MagicMock()
+    self.bg.run_webhook = MagicMock()
+    self.assertEqual(self.bg.deploy_swap(['test-blue', 'test-green'], ['cname-blue', 'cname-green']), 0)
+    self.bg.swap.assert_called_once_with('test-blue', 'test-green', False)
+
+  def test_swap_retries_should_return_non_zero_when_fails(self):
+    self.bg.env_get = MagicMock(return_value=None)
+    self.bg.run_hook = MagicMock(return_value=True)
+    self.bg.add_units = MagicMock(return_value=True)
+    self.bg.total_units = MagicMock(return_value=3)
+    self.bg.swap = MagicMock(return_value=False)
+    self.bg.remove_units = MagicMock()
+    self.bg.notify_newrelic = MagicMock()
+    self.bg.notify_grafana = MagicMock()
+    self.bg.run_webhook = MagicMock()
+    self.assertEqual(self.bg.deploy_swap(['test-blue', 'test-green'], ['cname-blue', 'cname-green']), 2)
+    self.bg.swap.assert_called_once_with('test-blue', 'test-green', False)
+
   def mock_total_units(self, values):
     calls = {'count': 0}
     def total_units(*args, **kwargs):

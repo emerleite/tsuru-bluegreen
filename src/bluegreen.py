@@ -156,7 +156,8 @@ class BlueGreen:
         print """
     There's a running event for this app. Wait for the plugin's configured removal retries."""
 
-      for i in range(1, self.retry_times+1):
+      try_times = self.retry_times + 1
+      for i in range(1, try_times):
         response.read() # Flush buffer
         print """
     Error removing '%s' units from %s. Retrying %d...""" % (process_name, app, i)
@@ -171,10 +172,10 @@ class BlueGreen:
           return True
 
       print """
-      Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, i)
+      Error removing '%s' units from %s in %d tries. Please, remove it manually.""" % (process_name, app, try_times)
       return False
-    else:
-      return True
+
+    return True
 
   def add_units(self, app, total_units_after_add):
     total_units = self.total_units(app)
@@ -341,7 +342,7 @@ class BlueGreen:
       print "\n  Error swaping {} and {}. Aborting...".format(apps[0], apps[1])
       self.remove_units(apps[1], 1)
       return 2
-    
+
     print "\n  Apps {} and {} cnames successfullly swapped!".format(apps[0], apps[1])
 
     self.remove_units(apps[0])
