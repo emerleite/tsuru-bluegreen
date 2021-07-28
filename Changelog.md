@@ -1,10 +1,14 @@
 # Changelog
 
-## 1.4.4 / 2020-08/27
+## 1.4.5 / 2021-07-28
+
+  - Fix tries log information
+
+## 1.4.4 / 2020-08-27
 
   - Workaround for tsuru's lock issue when remove multiple units
 
-## 1.4.3 / 2020-07/17
+## 1.4.3 / 2020-07-17
 
    - Deploy_swap method this will only be considered valid if the previous step, add_units works as expected. (mportela)
 
